@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ukdave/6502_emulator/bus"
+	"github.com/ukdave/6502_emulator/processor"
 )
 
 func main() {
@@ -16,4 +17,7 @@ func main() {
 
 	// Print out the data
 	fmt.Printf("Data at address 0x1000: 0x%X\n", data)
+
+	cpu := processor.NewCPU(bus)
+	cpu.Reset()
 }
