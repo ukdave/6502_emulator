@@ -1,6 +1,6 @@
 .PHONY: all deps fmt vet test cover build clean
 
-all: deps fmt vet test build
+all: deps fmt vet staticcheck test build
 
 deps:
 	go mod download
@@ -10,6 +10,9 @@ fmt:
 
 vet:
 	go vet ./...
+
+staticcheck:
+	staticcheck ./...
 
 test:
 	go test -coverprofile cover.out ./...

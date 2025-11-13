@@ -60,6 +60,10 @@ brew install asdf
 asdf plugin add golang
 asdf install
 
+# Install staticcheck
+go install honnef.co/go/tools/cmd/staticcheck@latest
+asdf reshim golang
+
 # Lint, test, and build code
 make
 
