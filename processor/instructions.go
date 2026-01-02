@@ -290,7 +290,43 @@ func ROR(cpu *CPU, addressInfo AddressInfo) bool {
 // Bitwise Instructions
 //
 
-// AND - Bitwise Logic AND
+// AND - Bitwise AND
+// Function: A = A & memory
+// Flags Out: Z, N
+func AND(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.A = cpu.A & cpu.Read(addressInfo.Address)
+	cpu.SetZN(cpu.A)
+	return true
+}
+
+// ORA - Bitwise OR
+// Function: A = A | memory
+// Flags Out: Z, N
+func ORA(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.A = cpu.A | cpu.Read(addressInfo.Address)
+	cpu.SetZN(cpu.A)
+	return true
+}
+
+// EOR - Bitwise XOR
+// Function: A = A ^ memory
+// Flags Out: Z, N
+func EOR(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.A = cpu.A ^ cpu.Read(addressInfo.Address)
+	cpu.SetZN(cpu.A)
+	return true
+}
+
+// BIT - Bit Test
+// Function: A & memory
+// Flags Out: Z, V, N
+func BIT(cpu *CPU, addressInfo AddressInfo) bool {
+	value := cpu.Read(addressInfo.Address)
+	cpu.SetFlag(Z, (cpu.A&value) == 0x00)
+	cpu.SetFlag(N, value&0x80 != 0)
+	cpu.SetFlag(V, value&0x40 != 0)
+	return false
+}
 
 //
 // Compare Instructions
