@@ -391,6 +391,418 @@ func (suite *InstructionsSuite) TestTYA_NegativeValue() {
 // Arithmetic Instructions
 //
 
+func (suite *InstructionsSuite) TestADC() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x02)
+
+	// Set the accumulator and carry flag to known values
+	suite.cpu.A = 0x03
+	suite.cpu.SetFlag(processor.C, false)
+
+	// Execute ADC instruction
+	extraCycle := processor.ADC(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0x05), suite.cpu.A, "Accumulator should be 0x05")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.V), "Overflow flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestADC_InitialCarrySet() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x02)
+
+	// Set the accumulator and carry flag to known values
+	suite.cpu.A = 0x03
+	suite.cpu.SetFlag(processor.C, true)
+
+	// Execute ADC instruction
+	extraCycle := processor.ADC(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0x06), suite.cpu.A, "Accumulator should be 0x06")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.V), "Overflow flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestADC_CarryOut() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x01)
+
+	// Set the accumulator and carry flag to known values
+	suite.cpu.A = 0xFF
+	suite.cpu.SetFlag(processor.C, false)
+
+	// Execute ADC instruction
+	extraCycle := processor.ADC(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0x00), suite.cpu.A, "Accumulator should wrap to 0x00")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be set")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.V), "Overflow flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be set")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestADC_Overflow() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x01)
+
+	// Set the accumulator and carry flag to known values
+	suite.cpu.A = 0x7F // +127
+	suite.cpu.SetFlag(processor.C, false)
+
+	// Execute ADC instruction
+	extraCycle := processor.ADC(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0x80), suite.cpu.A, "Accumulator should be 0x80")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.V), "Overflow flag should be set")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be set")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestADC_NegativeOverflow() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x80) // -128
+
+	// Set the accumulator and carry flag to known values
+	suite.cpu.A = 0x80 // -128
+	suite.cpu.SetFlag(processor.C, false)
+
+	// Execute ADC instruction
+	extraCycle := processor.ADC(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0x00), suite.cpu.A, "Accumulator should be 0x00")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be set")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.V), "Overflow flag should be set")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be set")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestSBC() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x02)
+
+	// Set the accumulator and carry flag to known values
+	suite.cpu.A = 0x05
+	suite.cpu.SetFlag(processor.C, true)
+
+	// Execute SBC instruction
+	extraCycle := processor.SBC(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0x03), suite.cpu.A, "Accumulator should be 0x03")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.V), "Overflow flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestSBC_Borrow() {
+	suite.bus.Write(0x2000, 0x05)
+
+	suite.cpu.A = 0x02
+	suite.cpu.SetFlag(processor.C, true)
+
+	extraCycle := processor.SBC(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0xFD), suite.cpu.A, "Accumulator should wrap to 0xFD")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be cleared (borrow)")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.V), "Overflow flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be set")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestSBC_ZeroResult() {
+	suite.bus.Write(0x2000, 0x05)
+
+	suite.cpu.A = 0x05
+	suite.cpu.SetFlag(processor.C, true)
+
+	extraCycle := processor.SBC(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0x00), suite.cpu.A, "Accumulator should be 0x00")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should remain set")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.V), "Overflow flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be set")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestSBC_InitialCarryClear() {
+	suite.bus.Write(0x2000, 0x01)
+
+	suite.cpu.A = 0x02
+	suite.cpu.SetFlag(processor.C, false)
+
+	extraCycle := processor.SBC(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0x00), suite.cpu.A, "Accumulator should be 0x00")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be set")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.V), "Overflow flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be set")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestSBC_Overflow() {
+	suite.bus.Write(0x2000, 0xFF) // -1
+
+	suite.cpu.A = 0x7F // +127
+	suite.cpu.SetFlag(processor.C, true)
+
+	extraCycle := processor.SBC(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0x80), suite.cpu.A, "Accumulator should be 0x80")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be cleared")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.V), "Overflow flag should be set")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be set")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestINC() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x05)
+
+	// Execute INC instruction
+	extraCycle := processor.INC(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0x06), suite.bus.Read(0x2000), "Memory at 0x2000 should be 0x06")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestINC_ZeroResult() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0xFF)
+
+	// Execute INC instruction
+	extraCycle := processor.INC(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0x00), suite.bus.Read(0x2000), "Memory at 0x2000 should be 0x00")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestINC_NegativeResult() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0xFE)
+
+	// Execute INC instruction
+	extraCycle := processor.INC(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0xFF), suite.bus.Read(0x2000), "Memory at 0x2000 should be 0xFF")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestDEC() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x05)
+
+	// Execute DEC instruction
+	extraCycle := processor.DEC(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0x04), suite.bus.Read(0x2000), "Memory at 0x2000 should be 0x04")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestDEC_ZeroResult() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x01)
+
+	// Execute DEC instruction
+	extraCycle := processor.DEC(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0x00), suite.bus.Read(0x2000), "Memory at 0x2000 should be 0x00")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestDEC_NegativeResult() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x00)
+
+	// Execute DEC instruction
+	extraCycle := processor.DEC(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0xFF), suite.bus.Read(0x2000), "Memory at 0x2000 should be 0xFF")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestINX() {
+	// Set the X register to a known value
+	suite.cpu.X = 0x05
+
+	// Execute INX instruction
+	extraCycle := processor.INX(suite.cpu, processor.AddressInfo{Address: 0x00})
+
+	assert.Equal(suite.T(), uint8(0x06), suite.cpu.X, "X should be 0x06")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestINX_ZeroResult() {
+	// Set the X register to a known value
+	suite.cpu.X = 0xFF
+
+	// Execute INX instruction
+	extraCycle := processor.INX(suite.cpu, processor.AddressInfo{Address: 0x00})
+
+	assert.Equal(suite.T(), uint8(0x00), suite.cpu.X, "X should be 0x00")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestINX_NegativeResult() {
+	// Set the X register to a known value
+	suite.cpu.X = 0xFE
+
+	// Execute INX instruction
+	extraCycle := processor.INX(suite.cpu, processor.AddressInfo{Address: 0x00})
+
+	assert.Equal(suite.T(), uint8(0xFF), suite.cpu.X, "X should be 0xFF")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestDEX() {
+	// Set the X register to a known value
+	suite.cpu.X = 0x05
+
+	// Execute DEX instruction
+	extraCycle := processor.DEX(suite.cpu, processor.AddressInfo{Address: 0x00})
+
+	assert.Equal(suite.T(), uint8(0x04), suite.cpu.X, "X should be 0x04")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestDEX_ZeroResult() {
+	// Set the X register to a known value
+	suite.cpu.X = 0x01
+
+	// Execute DEX instruction
+	extraCycle := processor.DEX(suite.cpu, processor.AddressInfo{Address: 0x00})
+
+	assert.Equal(suite.T(), uint8(0x00), suite.cpu.X, "X should be 0x00")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestDEX_NegativeResult() {
+	// Set the X register to a known value
+	suite.cpu.X = 0x00
+
+	// Execute DEX instruction
+	extraCycle := processor.DEX(suite.cpu, processor.AddressInfo{Address: 0x00})
+
+	assert.Equal(suite.T(), uint8(0xFF), suite.cpu.X, "X should be 0xFF")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestINY() {
+	// Set the Y register to a known value
+	suite.cpu.Y = 0x05
+
+	// Execute INY instruction
+	extraCycle := processor.INY(suite.cpu, processor.AddressInfo{Address: 0x00})
+
+	assert.Equal(suite.T(), uint8(0x06), suite.cpu.Y, "Y should be 0x06")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestINY_ZeroResult() {
+	// Set the Y register to a known value
+	suite.cpu.Y = 0xFF
+
+	// Execute INY instruction
+	extraCycle := processor.INY(suite.cpu, processor.AddressInfo{Address: 0x00})
+
+	assert.Equal(suite.T(), uint8(0x00), suite.cpu.Y, "Y should be 0x00")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestINY_NegativeResult() {
+	// Set the Y register to a known value
+	suite.cpu.Y = 0xFE
+
+	// Execute INY instruction
+	extraCycle := processor.INY(suite.cpu, processor.AddressInfo{Address: 0x00})
+
+	assert.Equal(suite.T(), uint8(0xFF), suite.cpu.Y, "Y should be 0xFF")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestDEY() {
+	// Set the Y register to a known value
+	suite.cpu.Y = 0x05
+
+	// Execute DEX instruction
+	extraCycle := processor.DEY(suite.cpu, processor.AddressInfo{Address: 0x00})
+
+	assert.Equal(suite.T(), uint8(0x04), suite.cpu.Y, "Y should be 0x04")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestDEY_ZeroResult() {
+	// Set the Y register to a known value
+	suite.cpu.Y = 0x01
+
+	// Execute DEY instruction
+	extraCycle := processor.DEY(suite.cpu, processor.AddressInfo{Address: 0x00})
+
+	assert.Equal(suite.T(), uint8(0x00), suite.cpu.Y, "Y should be 0x00")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestDEY_NegativeResult() {
+	// Set the Y register to a known value
+	suite.cpu.Y = 0x00
+
+	// Execute DEY instruction
+	extraCycle := processor.DEY(suite.cpu, processor.AddressInfo{Address: 0x00})
+
+	assert.Equal(suite.T(), uint8(0xFF), suite.cpu.Y, "Y should be 0xFF")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
 //
 // Shift Instructions
 //

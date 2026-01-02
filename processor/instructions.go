@@ -122,6 +122,90 @@ func TYA(cpu *CPU, addressInfo AddressInfo) bool {
 // Arithmetic Instructions
 //
 
+// ADC - Add with Carry
+// Function:  A = A + memory + C
+// Flags Out: C, Z, V, N
+func ADC(cpu *CPU, addressInfo AddressInfo) bool {
+	value := cpu.Read(addressInfo.Address)
+	temp := uint16(cpu.A) + uint16(value) + ternary(cpu.GetFlag(C), uint16(1), uint16(0))
+	cpu.SetFlag(C, temp > 0xFF)
+	cpu.SetFlag(V, (cpu.A^value)&0x80 == 0 && (uint16(cpu.A)^temp)&0x80 != 0)
+	cpu.A = uint8(temp)
+	cpu.SetZN(cpu.A)
+	return true
+}
+
+// SBC - Subtract with Carry
+// Function: A = A - memory - !C
+// Flags Out: C, Z, V, N
+func SBC(cpu *CPU, addressInfo AddressInfo) bool {
+	value := cpu.Read(addressInfo.Address)
+	temp := uint16(cpu.A) - uint16(value) - ternary(cpu.GetFlag(C), uint16(0), uint16(1))
+	cpu.SetFlag(C, temp <= 0xFF)
+	cpu.SetFlag(V, (cpu.A^value)&0x80 != 0 && (uint16(cpu.A)^temp)&0x80 != 0)
+	cpu.A = uint8(temp)
+	cpu.SetZN(cpu.A)
+	return true
+}
+
+// INC - Increment Memory
+// Function: memory = memory + 1
+// Flags Out: Z, N
+func INC(cpu *CPU, addressInfo AddressInfo) bool {
+	value := cpu.Read(addressInfo.Address)
+	value++
+	cpu.Write(addressInfo.Address, value)
+	cpu.SetZN(value)
+	return false
+}
+
+// DEC - Decrement Memory
+// Function: memory = memory - 1
+// Flags Out: Z, N
+func DEC(cpu *CPU, addressInfo AddressInfo) bool {
+	value := cpu.Read(addressInfo.Address)
+	value--
+	cpu.Write(addressInfo.Address, value)
+	cpu.SetZN(value)
+	return false
+}
+
+// INX - Increment X Register
+// Function: X = X + 1
+// Flags Out: Z, N
+func INX(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.X++
+	cpu.SetZN(cpu.X)
+	return false
+}
+
+// DEX - Decrement X Register
+// Function: X = X - 1
+// Flags Out: Z, N
+func DEX(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.X--
+	cpu.SetZN(cpu.X)
+	return false
+}
+
+// INY - Increment Y Register
+// Function: Y = Y + 1
+// Flags Out: Z, N
+func INY(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.Y++
+	cpu.SetZN(cpu.Y)
+	return false
+}
+
+// DEY - Decrement Y Register
+// Function: Y = Y - 1
+// Flags Out: Z, N
+func DEY(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.Y--
+	cpu.SetZN(cpu.Y)
+	return false
+}
+
 //
 // Shift Instructions
 //
