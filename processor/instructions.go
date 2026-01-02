@@ -82,6 +82,42 @@ func STY(cpu *CPU, addressInfo AddressInfo) bool {
 // Transfer Instructions
 //
 
+// TAX - Transfer Accumulator to X Register
+// Function:  X = A
+// Flags Out: Z, N
+func TAX(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.X = cpu.A
+	cpu.SetZN(cpu.X)
+	return false
+}
+
+// TAY - Transfer Accumulator to Y Register
+// Function:  Y = A
+// Flags Out: Z, N
+func TAY(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.Y = cpu.A
+	cpu.SetZN(cpu.Y)
+	return false
+}
+
+// TXA - Transfer X Register to Accumulator
+// Function:  A = X
+// Flags Out: Z, N
+func TXA(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.A = cpu.X
+	cpu.SetZN(cpu.A)
+	return false
+}
+
+// TYA - Transfer Y Register to Accumulator
+// Function:  A = Y
+// Flags Out: Z, N
+func TYA(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.A = cpu.Y
+	cpu.SetZN(cpu.A)
+	return false
+}
+
 //
 // Arithmetic Instructions
 //

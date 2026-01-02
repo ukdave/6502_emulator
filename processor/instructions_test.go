@@ -219,6 +219,174 @@ func (suite *InstructionsSuite) TestSTY() {
 // Transfer Instructions
 //
 
+func (suite *InstructionsSuite) TestTAX() {
+	// Set the Accumulator and X Register to known values
+	suite.cpu.A = 0x56
+	suite.cpu.X = 0x00
+
+	// Execute TAX instruction
+	extraCycle := processor.TAX(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint8(0x56), suite.cpu.X, "X Register should be 0x56")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestTAX_ZeroValue() {
+	// Set the Accumulator and X Register to known values
+	suite.cpu.A = 0x00
+	suite.cpu.X = 0x12
+
+	// Execute TAX instruction
+	extraCycle := processor.TAX(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint8(0x00), suite.cpu.X, "X Register should be 0x00")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestTAX_NegativeValue() {
+	// Set the Accumulator and X Register to known values
+	suite.cpu.A = 0xFF
+	suite.cpu.X = 0x00
+
+	// Execute TAX instruction
+	extraCycle := processor.TAX(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint8(0xFF), suite.cpu.X, "X Register should be 0xFF")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestTAY() {
+	// Set the Accumulator and Y Register to known values
+	suite.cpu.A = 0x56
+	suite.cpu.Y = 0x00
+
+	// Execute TAY instruction
+	extraCycle := processor.TAY(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint8(0x56), suite.cpu.Y, "Y Register should be 0x56")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestTAY_ZeroValue() {
+	// Set the Accumulator and Y Register to known values
+	suite.cpu.A = 0x00
+	suite.cpu.Y = 0x12
+
+	// Execute TAY instruction
+	extraCycle := processor.TAY(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint8(0x00), suite.cpu.Y, "Y Register should be 0x00")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestTAY_NegativeValue() {
+	// Set the Accumulator and Y Register to known values
+	suite.cpu.A = 0xFF
+	suite.cpu.Y = 0x00
+
+	// Execute TAY instruction
+	extraCycle := processor.TAY(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint8(0xFF), suite.cpu.Y, "Y Register should be 0xFF")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestTXA() {
+	// Set the X Register and Accumulator to known values
+	suite.cpu.X = 0x56
+	suite.cpu.A = 0x00
+
+	// Execute TXA instruction
+	extraCycle := processor.TXA(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint8(0x56), suite.cpu.A, "Accumulator should be 0x56")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestTXA_ZeroValue() {
+	// Set the X Register and Accumulator to known values
+	suite.cpu.X = 0x00
+	suite.cpu.A = 0x12
+
+	// Execute TXA instruction
+	extraCycle := processor.TXA(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint8(0x00), suite.cpu.A, "Accumulator should be 0x00")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestTXA_NegativeValue() {
+	// Set the X Register and Accumulator to known values
+	suite.cpu.X = 0xFF
+	suite.cpu.A = 0x00
+
+	// Execute TXA instruction
+	extraCycle := processor.TXA(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint8(0xFF), suite.cpu.A, "Accumulator should be 0xFF")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestTYA() {
+	// Set the Y Register and Accumulator to known values
+	suite.cpu.Y = 0x56
+	suite.cpu.A = 0x00
+
+	// Execute TYA instruction
+	extraCycle := processor.TYA(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint8(0x56), suite.cpu.A, "Accumulator should be 0x56")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestTYA_ZeroValue() {
+	// Set the Y Register and Accumulator to known values
+	suite.cpu.Y = 0x00
+	suite.cpu.A = 0x12
+
+	// Execute TYA instruction
+	extraCycle := processor.TYA(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint8(0x00), suite.cpu.A, "Accumulator should be 0x00")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestTYA_NegativeValue() {
+	// Set the Y Register and Accumulator to known values
+	suite.cpu.Y = 0xFF
+	suite.cpu.A = 0x00
+
+	// Execute TYA instruction
+	extraCycle := processor.TYA(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint8(0xFF), suite.cpu.A, "Accumulator should be 0xFF")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
 //
 // Arithmetic Instructions
 //
