@@ -332,6 +332,39 @@ func BIT(cpu *CPU, addressInfo AddressInfo) bool {
 // Compare Instructions
 //
 
+// CMP - Compare Accumulator
+// Function: A - memory
+// Flags Out: C, Z, N
+func CMP(cpu *CPU, addressInfo AddressInfo) bool {
+	value := cpu.Read(addressInfo.Address)
+	temp := uint16(cpu.A) - uint16(value)
+	cpu.SetFlag(C, cpu.A >= value)
+	cpu.SetZN(byte(temp & 0x00FF))
+	return true
+}
+
+// CPX - Compare X Register
+// Function: X - memory
+// Flags Out: C, Z, N
+func CPX(cpu *CPU, addressInfo AddressInfo) bool {
+	value := cpu.Read(addressInfo.Address)
+	temp := uint16(cpu.X) - uint16(value)
+	cpu.SetFlag(C, cpu.X >= value)
+	cpu.SetZN(byte(temp & 0x00FF))
+	return false
+}
+
+// CPY - Compare Y Register
+// Function: Y - memory
+// Flags Out: C, Z, N
+func CPY(cpu *CPU, addressInfo AddressInfo) bool {
+	value := cpu.Read(addressInfo.Address)
+	temp := uint16(cpu.Y) - uint16(value)
+	cpu.SetFlag(C, cpu.Y >= value)
+	cpu.SetZN(byte(temp & 0x00FF))
+	return false
+}
+
 //
 // Branch Instructions
 //

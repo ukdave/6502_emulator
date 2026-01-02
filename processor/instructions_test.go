@@ -1413,6 +1413,150 @@ func (suite *InstructionsSuite) TestBIT_Overflow() {
 // Compare Instructions
 //
 
+func (suite *InstructionsSuite) TestCMP_LessThan() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x02)
+
+	// Set the Accumulator to a known value
+	suite.cpu.A = 0x03
+
+	// Execute CMP instruction
+	extraCycle := processor.CMP(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Cary flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestCMP_GreaterThan() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x03)
+
+	// Set the Accumulator to a known value
+	suite.cpu.A = 0x02
+
+	// Execute CMP instruction
+	extraCycle := processor.CMP(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Cary flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestCMP_Equal() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x02)
+
+	// Set the Accumulator to a known value
+	suite.cpu.A = 0x02
+
+	// Execute CMP instruction
+	extraCycle := processor.CMP(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Cary flag should be true")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestCPX_LessThan() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x02)
+
+	// Set the X Register to a known value
+	suite.cpu.X = 0x03
+
+	// Execute CPX instruction
+	extraCycle := processor.CPX(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Cary flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestCPX_GreaterThan() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x03)
+
+	// Set the X Register to a known value
+	suite.cpu.X = 0x02
+
+	// Execute CPX instruction
+	extraCycle := processor.CPX(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Cary flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestCPX_Equal() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x02)
+
+	// Set the X Register to a known value
+	suite.cpu.X = 0x02
+
+	// Execute CPX instruction
+	extraCycle := processor.CPX(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Cary flag should be true")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestCPY_LessThan() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x02)
+
+	// Set the Y Register to a known value
+	suite.cpu.Y = 0x03
+
+	// Execute CPY instruction
+	extraCycle := processor.CPY(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Cary flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestCPY_GreaterThan() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x03)
+
+	// Set the Y Register to a known value
+	suite.cpu.Y = 0x02
+
+	// Execute CPY instruction
+	extraCycle := processor.CPY(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Cary flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestCPY_Equal() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x02)
+
+	// Set the Y Register to a known value
+	suite.cpu.Y = 0x02
+
+	// Execute CPY instruction
+	extraCycle := processor.CPY(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Cary flag should be true")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
 //
 // Branch Instructions
 //
