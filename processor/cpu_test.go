@@ -60,6 +60,17 @@ func TestRead16(t *testing.T) {
 	assert.Equal(t, uint16(0xABCD), cpu.Read16(0x1234))
 }
 
+func TestWrite(t *testing.T) {
+	// Create a new CPU
+	bus := bus.NewSimpleBus()
+	cpu := processor.NewCPU(bus)
+
+	// Write a value to the bus
+	cpu.Write(0x1234, 0xAB)
+
+	assert.Equal(t, uint8(0xAB), bus.Read(0x1234))
+}
+
 func TestGetFlag(t *testing.T) {
 	// Create a new CPU
 	cpu := &processor.CPU{}
@@ -126,4 +137,19 @@ func TestSetFlag(t *testing.T) {
 	cpu.SetFlag(processor.Z, false)
 	cpu.SetFlag(processor.V, false)
 	assert.Equal(t, uint8(0b10111101), cpu.Status, "Zero and Overflow flags should be clear")
+}
+
+func TestSetZN(t *testing.T) {
+	// Create a new CPU
+	cpu := &processor.CPU{}
+
+	// Set the Zero flag and clear the Negative flag
+	cpu.SetFlag(processor.Z, true)
+	cpu.SetFlag(processor.N, false)
+
+	// Update Zero and Clear flags together
+	cpu.SetZN(0xFF)
+
+	assert.False(t, cpu.GetFlag(processor.Z), "Zero flag should be clear")
+	assert.True(t, cpu.GetFlag(processor.N), "Negative flag should be set")
 }

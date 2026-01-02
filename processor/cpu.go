@@ -78,6 +78,11 @@ func (c *CPU) Read16(addr uint16) uint16 {
 	return (hi << 8) | lo
 }
 
+// Write writes an 8-bit value to the bus at ths specified address.
+func (c *CPU) Write(addr uint16, data byte) {
+	c.bus.Write(addr, data)
+}
+
 // GetFlag returns the value of a specific bit of the status register.
 func (c *CPU) GetFlag(flag Flag) bool {
 	return (c.Status & byte(flag)) > 0
@@ -90,4 +95,10 @@ func (c *CPU) SetFlag(flag Flag, value bool) {
 	} else {
 		c.Status &= ^byte(flag)
 	}
+}
+
+// SetZN sets both the Zero and Negative flags based on the given value.
+func (c *CPU) SetZN(value byte) {
+	c.SetFlag(Z, value == 0x00)
+	c.SetFlag(N, value&0x80 > 0)
 }

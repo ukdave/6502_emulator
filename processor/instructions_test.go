@@ -29,6 +29,192 @@ func (suite *InstructionsSuite) SetupTest() {
 // Access Instructions
 //
 
+func (suite *InstructionsSuite) TestLDA() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x12)
+
+	// Set the Accumulator to a known value
+	suite.cpu.A = 0x00
+
+	// Execute LDA instruction
+	extraCycle := processor.LDA(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0x12), suite.cpu.A, "Accumulator should be 0x12")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestLDA_ZeroValue() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x00)
+
+	// Set the Accumulator to a known value
+	suite.cpu.A = 0x12
+
+	// Execute LDA instruction
+	extraCycle := processor.LDA(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0x00), suite.cpu.A, "Accumulator should be 0x00")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestLDA_NegativeValue() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0xFF)
+
+	// Set the Accumulator to a known value
+	suite.cpu.A = 0x00
+
+	// Execute LDA instruction
+	extraCycle := processor.LDA(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0xFF), suite.cpu.A, "Accumulator should be 0xFF")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestSTA() {
+	// Set the Accumulator to a known value
+	suite.cpu.A = 0x34
+
+	// Execute STA instruction
+	extraCycle := processor.STA(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	// Read back the value from memory
+	value := suite.bus.Read(0x2000)
+
+	assert.Equal(suite.T(), uint8(0x34), value, "Memory at 0x2000 should be 0x34")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestLDX() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x12)
+
+	// Set the X Register to a known value
+	suite.cpu.X = 0x00
+
+	// Execute LDX instruction
+	extraCycle := processor.LDX(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0x12), suite.cpu.X, "X Register should be 0x12")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestLDX_ZeroValue() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x00)
+
+	// Set the X Register to a known value
+	suite.cpu.X = 0x12
+
+	// Execute LDX instruction
+	extraCycle := processor.LDX(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0x00), suite.cpu.X, "X Register should be 0x00")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestLDX_NegativeValue() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0xFF)
+
+	// Set the X Register to a known value
+	suite.cpu.X = 0x00
+
+	// Execute LDX instruction
+	extraCycle := processor.LDX(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0xFF), suite.cpu.X, "X Register should be 0xFF")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestSTX() {
+	// Set the X Register to a known value
+	suite.cpu.X = 0x34
+
+	// Execute STX instruction
+	extraCycle := processor.STX(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	// Read back the value from memory
+	value := suite.bus.Read(0x2000)
+
+	assert.Equal(suite.T(), uint8(0x34), value, "Memory at 0x2000 should be 0x34")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestLDY() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x12)
+
+	// Set the Y Register to a known value
+	suite.cpu.Y = 0x00
+
+	// Execute LDY instruction
+	extraCycle := processor.LDY(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0x12), suite.cpu.Y, "Y Register should be 0x12")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestLDY_ZeroValue() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0x00)
+
+	// Set the Y Register to a known value
+	suite.cpu.Y = 0x12
+
+	// Execute LDY instruction
+	extraCycle := processor.LDY(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0x00), suite.cpu.Y, "Y Register should be 0x00")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestLDY_NegativeValue() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0xFF)
+
+	// Set the Y Register to a known value
+	suite.cpu.Y = 0x00
+
+	// Execute LDY instruction
+	extraCycle := processor.LDY(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0xFF), suite.cpu.Y, "Y Register should be 0xFF")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.True(suite.T(), extraCycle, "Expected extraCycle to be true")
+}
+
+func (suite *InstructionsSuite) TestSTY() {
+	// Set the Y Register to a known value
+	suite.cpu.Y = 0x34
+
+	// Execute STY instruction
+	extraCycle := processor.STY(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	// Read back the value from memory
+	value := suite.bus.Read(0x2000)
+
+	assert.Equal(suite.T(), uint8(0x34), value, "Memory at 0x2000 should be 0x34")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
 //
 // Transfer Instructions
 //

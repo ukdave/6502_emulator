@@ -27,6 +27,57 @@ type InstructionFunc func(*CPU, AddressInfo) bool
 // Access Instructions
 //
 
+// LDA - Load Accumulator
+// Function:  A = memory
+// Flags Out: Z, N
+func LDA(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.A = cpu.Read(addressInfo.Address)
+	cpu.SetZN(cpu.A)
+	return true
+}
+
+// STA - Store Accumulator
+// Function:  memory = A
+// Flags Out: None
+func STA(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.Write(addressInfo.Address, cpu.A)
+	return false
+}
+
+// LDX - Load X Register
+// Function:  X = memory
+// Flags Out: Z, N
+func LDX(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.X = cpu.Read(addressInfo.Address)
+	cpu.SetZN(cpu.X)
+	return true
+}
+
+// STX - Store X Register
+// Function:  memory = X
+// Flags Out: None
+func STX(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.Write(addressInfo.Address, cpu.X)
+	return false
+}
+
+// LDY - Load Y Register
+// Function:  A = memory
+// Flags Out: Z, N
+func LDY(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.Y = cpu.Read(addressInfo.Address)
+	cpu.SetZN(cpu.Y)
+	return true
+}
+
+// STY - Store Y Register
+// Function:  memory = X
+// Flags Out: None
+func STY(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.Write(addressInfo.Address, cpu.Y)
+	return false
+}
+
 //
 // Transfer Instructions
 //
