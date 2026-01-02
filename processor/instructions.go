@@ -210,6 +210,82 @@ func DEY(cpu *CPU, addressInfo AddressInfo) bool {
 // Shift Instructions
 //
 
+// ASL - Arithmetic Shift Left
+// Function: value = value << 1
+// Flags Out: C, Z, N
+func ASL(cpu *CPU, addressInfo AddressInfo) bool {
+	if addressInfo.IsAccumulator {
+		cpu.SetFlag(C, (cpu.A&0x80) != 0)
+		cpu.A <<= 1
+		cpu.SetZN(cpu.A)
+	} else {
+		value := cpu.Read(addressInfo.Address)
+		cpu.SetFlag(C, (value&0x80) != 0)
+		value <<= 1
+		cpu.Write(addressInfo.Address, value)
+		cpu.SetZN(value)
+	}
+	return false
+}
+
+// LSR - Logical Shift Right
+// Function: value = value >> 1
+// Flags Out: C, Z, N
+func LSR(cpu *CPU, addressInfo AddressInfo) bool {
+	if addressInfo.IsAccumulator {
+		cpu.SetFlag(C, (cpu.A&0x01) != 0)
+		cpu.A >>= 1
+		cpu.SetZN(cpu.A)
+	} else {
+		value := cpu.Read(addressInfo.Address)
+		cpu.SetFlag(C, (value&0x01) != 0)
+		value >>= 1
+		cpu.Write(addressInfo.Address, value)
+		cpu.SetZN(value)
+	}
+	return false
+}
+
+// ROL - Rotate Left
+// Function: value = value << 1 through C
+// Flags Out: C, Z, N
+func ROL(cpu *CPU, addressInfo AddressInfo) bool {
+	if addressInfo.IsAccumulator {
+		c := cpu.GetFlag(C)
+		cpu.SetFlag(C, (cpu.A&0x80) != 0)
+		cpu.A = (cpu.A << 1) | (ternary(c, byte(1), byte(0)))
+		cpu.SetZN(cpu.A)
+	} else {
+		c := cpu.GetFlag(C)
+		value := cpu.Read(addressInfo.Address)
+		cpu.SetFlag(C, (value&0x80) != 0)
+		value = (value << 1) | (ternary(c, byte(1), byte(0)))
+		cpu.Write(addressInfo.Address, value)
+		cpu.SetZN(value)
+	}
+	return false
+}
+
+// ROR - Rotate Right
+// Function: value = value >> 1 through C
+// Flags Out: C, Z, N
+func ROR(cpu *CPU, addressInfo AddressInfo) bool {
+	if addressInfo.IsAccumulator {
+		c := cpu.GetFlag(C)
+		cpu.SetFlag(C, (cpu.A&0x01) != 0)
+		cpu.A = (cpu.A >> 1) | ((ternary(c, byte(1), byte(0))) << 7)
+		cpu.SetZN(cpu.A)
+	} else {
+		c := cpu.GetFlag(C)
+		value := cpu.Read(addressInfo.Address)
+		cpu.SetFlag(C, (value&0x01) != 0)
+		value = (value >> 1) | ((ternary(c, byte(1), byte(0))) << 7)
+		cpu.Write(addressInfo.Address, value)
+		cpu.SetZN(value)
+	}
+	return false
+}
+
 //
 // Bitwise Instructions
 //

@@ -807,6 +807,412 @@ func (suite *InstructionsSuite) TestDEY_NegativeResult() {
 // Shift Instructions
 //
 
+func (suite *InstructionsSuite) TestASL() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0b00000001)
+
+	// Execute ASL instruction
+	extraCycle := processor.ASL(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0b00000010), suite.bus.Read(0x2000), "Memory at 0x2000 should be 0b00000010")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestASL_Carry() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0b11000000)
+
+	// Execute ASL instruction
+	extraCycle := processor.ASL(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0b10000000), suite.bus.Read(0x2000), "Memory at 0x2000 should be 0b10000000")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestASL_ZeroResult() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0b10000000)
+
+	// Execute ASL instruction
+	extraCycle := processor.ASL(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0b00000000), suite.bus.Read(0x2000), "Memory at 0x2000 should be 0b00000000")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be true")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestASL_NegativeResult() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0b01100000)
+
+	// Execute ASL instruction
+	extraCycle := processor.ASL(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0b11000000), suite.bus.Read(0x2000), "Memory at 0x2000 should be 0b11000000")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestASL_Accumulator() {
+	// Set the Accumulator to a known value
+	suite.cpu.A = 0b00000001
+
+	// Execute ASL instruction in Accumulator mode
+	extraCycle := processor.ASL(suite.cpu, processor.AddressInfo{IsAccumulator: true})
+
+	assert.Equal(suite.T(), uint8(0b00000010), suite.cpu.A, "Accumulator should be 0b00000010")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestASL_AccumulatorAndCarry() {
+	// Set the Accumulator to a known value
+	suite.cpu.A = 0b11000000
+
+	// Execute ASL instruction in Accumulator mode
+	extraCycle := processor.ASL(suite.cpu, processor.AddressInfo{IsAccumulator: true})
+
+	assert.Equal(suite.T(), uint8(0b10000000), suite.cpu.A, "Accumulator should be 0b10000000")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestASL_AccumulatorAndZeroResult() {
+	// Set the Accumulator to a known value
+	suite.cpu.A = 0b10000000
+
+	// Execute ASL instruction in Accumulator mode
+	extraCycle := processor.ASL(suite.cpu, processor.AddressInfo{IsAccumulator: true})
+
+	assert.Equal(suite.T(), uint8(0b00000000), suite.cpu.A, "Accumulator should be 0b00000000")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be true")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestASL_AccumulatorAndNegativeResult() {
+	// Set the Accumulator to a known value
+	suite.cpu.A = 0b01100000
+
+	// Execute ASL instruction in Accumulator mode
+	extraCycle := processor.ASL(suite.cpu, processor.AddressInfo{IsAccumulator: true})
+
+	assert.Equal(suite.T(), uint8(0b11000000), suite.cpu.A, "Accumulator should be 0b11000000")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestLSR() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0b00000010)
+
+	// Execute LSR instruction
+	extraCycle := processor.LSR(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0b0000001), suite.bus.Read(0x2000), "Memory at 0x2000 should be 0b0000001")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestLSR_Carry() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0b00000011)
+
+	// Execute LSR instruction
+	extraCycle := processor.LSR(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0b00000001), suite.bus.Read(0x2000), "Memory at 0x2000 should be 0b00000001")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestLSR_ZeroResult() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0b00000001)
+
+	// Execute LSR instruction
+	extraCycle := processor.LSR(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0b00000000), suite.bus.Read(0x2000), "Memory at 0x2000 should be 0b00000000")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be true")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestLSR_Accumulator() {
+	// Set the Accumulator to a known value
+	suite.cpu.A = 0b00000010
+
+	// Execute LSR instruction in Accumulator mode
+	extraCycle := processor.LSR(suite.cpu, processor.AddressInfo{IsAccumulator: true})
+
+	assert.Equal(suite.T(), uint8(0b00000001), suite.cpu.A, "Accumulator should be 0b00000001")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestLSR_AccumulatorAndCarry() {
+	// Set the Accumulator to a known value
+	suite.cpu.A = 0b00000011
+
+	// Execute LSR instruction in Accumulator mode
+	extraCycle := processor.LSR(suite.cpu, processor.AddressInfo{IsAccumulator: true})
+
+	assert.Equal(suite.T(), uint8(0b00000001), suite.cpu.A, "Accumulator should be 0b00000001")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestLSR_AccumulatorAndZeroResult() {
+	// Set the Accumulator to a known value
+	suite.cpu.A = 0b00000001
+
+	// Execute LSR instruction in Accumulator mode
+	extraCycle := processor.LSR(suite.cpu, processor.AddressInfo{IsAccumulator: true})
+
+	assert.Equal(suite.T(), uint8(0b00000000), suite.cpu.A, "Accumulator should be 0b00000000")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be true")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestROL() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0b00000010)
+	suite.cpu.SetFlag(processor.C, false)
+
+	// Execute ROL instruction
+	extraCycle := processor.ROL(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0b00000100), suite.bus.Read(0x2000), "Memory at 0x2000 should be 0b00000100")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestROL_Negative() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0b01000000)
+	suite.cpu.SetFlag(processor.C, false)
+
+	// Execute ROL instruction
+	extraCycle := processor.ROL(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0b10000000), suite.bus.Read(0x2000), "Memory at 0x2000 should be 0b10000000")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestROL_CarryOut() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0b10000000)
+	suite.cpu.SetFlag(processor.C, false)
+
+	// Execute ROL instruction
+	extraCycle := processor.ROL(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0b00000000), suite.bus.Read(0x2000), "Memory at 0x2000 should be 0b00000000")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be true")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestROL_CarryIn() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0b00000000)
+	suite.cpu.SetFlag(processor.C, true)
+
+	// Execute ROL instruction
+	extraCycle := processor.ROL(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0b00000001), suite.bus.Read(0x2000), "Memory at 0x2000 should be 0b00000001")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestROL_Accumulator() {
+	// Set the Accumulator to a known value
+	suite.cpu.A = 0b00000010
+	suite.cpu.SetFlag(processor.C, false)
+
+	// Execute ROL instruction
+	extraCycle := processor.ROL(suite.cpu, processor.AddressInfo{IsAccumulator: true})
+
+	assert.Equal(suite.T(), uint8(0b00000100), suite.cpu.A, "Accumulator should be 0b00000100")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestROL_AccumulatorAndNegative() {
+	// Set the Accumulator to a known value
+	suite.cpu.A = 0b01000000
+	suite.cpu.SetFlag(processor.C, false)
+
+	// Execute ROL instruction
+	extraCycle := processor.ROL(suite.cpu, processor.AddressInfo{IsAccumulator: true})
+
+	assert.Equal(suite.T(), uint8(0b10000000), suite.cpu.A, "Accumulator should be 0b10000000")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestROL_AccumulatorAndCarryOut() {
+	// Set the Accumulator to a known value
+	suite.cpu.A = 0b10000000
+	suite.cpu.SetFlag(processor.C, false)
+
+	// Execute ROL instruction
+	extraCycle := processor.ROL(suite.cpu, processor.AddressInfo{IsAccumulator: true})
+
+	assert.Equal(suite.T(), uint8(0b00000000), suite.cpu.A, "Accumulator should be 0b00000000")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be true")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestROL_AccumulatorAndCarryIn() {
+	// Set the Accumulator to a known value
+	suite.cpu.A = 0b00000000
+	suite.cpu.SetFlag(processor.C, true)
+
+	// Execute ROL instruction
+	extraCycle := processor.ROL(suite.cpu, processor.AddressInfo{IsAccumulator: true})
+
+	assert.Equal(suite.T(), uint8(0b00000001), suite.cpu.A, "Accumulator should be 0b00000001")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestROR() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0b00000010)
+	suite.cpu.SetFlag(processor.C, false)
+
+	// Execute ROR instruction
+	extraCycle := processor.ROR(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0b00000001), suite.bus.Read(0x2000), "Memory at 0x2000 should be 0b00000001")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestROR_CarryOut() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0b00000001)
+	suite.cpu.SetFlag(processor.C, false)
+
+	// Execute ROR instruction
+	extraCycle := processor.ROR(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0b00000000), suite.bus.Read(0x2000), "Memory at 0x2000 should be 0b00000000")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be true")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestROR_CarryIn() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0b00000000)
+	suite.cpu.SetFlag(processor.C, true)
+
+	// Execute ROR instruction
+	extraCycle := processor.ROR(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint8(0b10000000), suite.bus.Read(0x2000), "Memory at 0x2000 should be 0b10000000")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestROR_Accumulator() {
+	// Set the Accumulator to a known value
+	suite.cpu.A = 0b00000010
+	suite.cpu.SetFlag(processor.C, false)
+
+	// Execute ROR instruction
+	extraCycle := processor.ROR(suite.cpu, processor.AddressInfo{IsAccumulator: true})
+
+	assert.Equal(suite.T(), uint8(0b00000001), suite.cpu.A, "Accumulator should be 0b00000001")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestROR_AccumulatorAndCarryOut() {
+	// Set the Accumulator to a known value
+	suite.cpu.A = 0b00000001
+	suite.cpu.SetFlag(processor.C, false)
+
+	// Execute ROR instruction
+	extraCycle := processor.ROR(suite.cpu, processor.AddressInfo{IsAccumulator: true})
+
+	assert.Equal(suite.T(), uint8(0b00000000), suite.cpu.A, "Accumulator should be 0b00000000")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be true")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestROR_AccumulatorAndCarryIn() {
+	// Write a value to memory at address 0x2000
+	suite.bus.Write(0x2000, 0b00000000)
+	suite.cpu.SetFlag(processor.C, true)
+
+	// Execute ROR instruction
+	extraCycle := processor.ROR(suite.cpu, processor.AddressInfo{IsAccumulator: true})
+
+	assert.Equal(suite.T(), uint8(0b10000000), suite.cpu.A, "Accumulator should be 0b10000000")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Carry flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
 //
 // Bitwise Instructions
 //
