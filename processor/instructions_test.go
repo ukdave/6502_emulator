@@ -1561,6 +1561,366 @@ func (suite *InstructionsSuite) TestCPY_Equal() {
 // Branch Instructions
 //
 
+func (suite *InstructionsSuite) TestBCC_Taken() {
+	// Set the Carry flag to false
+	suite.cpu.SetFlag(processor.C, false)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BCC instruction
+	extraCycle := processor.BCC(suite.cpu, processor.AddressInfo{Address: 0x1050})
+
+	assert.Equal(suite.T(), uint16(0x1050), suite.cpu.PC, "Expected PC to be 0x1050")
+	assert.Equal(suite.T(), uint8(1), suite.cpu.Cycles(), "Expected cycles to be 1")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBCC_TakenAndPageCrossed() {
+	// Set the Carry flag to false
+	suite.cpu.SetFlag(processor.C, false)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BCC instruction
+	extraCycle := processor.BCC(suite.cpu, processor.AddressInfo{Address: 0x2000, PageChanged: true})
+
+	assert.Equal(suite.T(), uint16(0x2000), suite.cpu.PC, "Expected PC to be 0x2000")
+	assert.Equal(suite.T(), uint8(2), suite.cpu.Cycles(), "Expected cycles to be 2")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBCC_NotTaken() {
+	// Set the Carry flag to true
+	suite.cpu.SetFlag(processor.C, true)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BCC instruction
+	extraCycle := processor.BCC(suite.cpu, processor.AddressInfo{Address: 0x1050})
+
+	assert.Equal(suite.T(), uint16(0x1000), suite.cpu.PC, "Expected PC to be 0x1000")
+	assert.Equal(suite.T(), uint8(0), suite.cpu.Cycles(), "Expected cycles to be 0")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBCS_Taken() {
+	// Set the Carry flag to true
+	suite.cpu.SetFlag(processor.C, true)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BCS instruction
+	extraCycle := processor.BCS(suite.cpu, processor.AddressInfo{Address: 0x1050})
+
+	assert.Equal(suite.T(), uint16(0x1050), suite.cpu.PC, "Expected PC to be 0x1050")
+	assert.Equal(suite.T(), uint8(1), suite.cpu.Cycles(), "Expected cycles to be 1")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBCS_TakenAndPageCrossed() {
+	// Set the Carry flag to true
+	suite.cpu.SetFlag(processor.C, true)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BCS instruction
+	extraCycle := processor.BCS(suite.cpu, processor.AddressInfo{Address: 0x2000, PageChanged: true})
+
+	assert.Equal(suite.T(), uint16(0x2000), suite.cpu.PC, "Expected PC to be 0x2000")
+	assert.Equal(suite.T(), uint8(2), suite.cpu.Cycles(), "Expected cycles to be 2")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBCS_NotTaken() {
+	// Set the Carry flag to false
+	suite.cpu.SetFlag(processor.C, false)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BCS instruction
+	extraCycle := processor.BCS(suite.cpu, processor.AddressInfo{Address: 0x1050})
+
+	assert.Equal(suite.T(), uint16(0x1000), suite.cpu.PC, "Expected PC to be 0x1000")
+	assert.Equal(suite.T(), uint8(0), suite.cpu.Cycles(), "Expected cycles to be 0")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBEQ_Taken() {
+	// Set the Zero flag to true
+	suite.cpu.SetFlag(processor.Z, true)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BEQ instruction
+	extraCycle := processor.BEQ(suite.cpu, processor.AddressInfo{Address: 0x1050})
+
+	assert.Equal(suite.T(), uint16(0x1050), suite.cpu.PC, "Expected PC to be 0x1050")
+	assert.Equal(suite.T(), uint8(1), suite.cpu.Cycles(), "Expected cycles to be 1")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBEQ_TakenAndPageCrossed() {
+	// Set the Zero flag to true
+	suite.cpu.SetFlag(processor.Z, true)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BEQ instruction
+	extraCycle := processor.BEQ(suite.cpu, processor.AddressInfo{Address: 0x2000, PageChanged: true})
+
+	assert.Equal(suite.T(), uint16(0x2000), suite.cpu.PC, "Expected PC to be 0x2000")
+	assert.Equal(suite.T(), uint8(2), suite.cpu.Cycles(), "Expected cycles to be 2")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBEQ_NotTaken() {
+	// Set the Zero flag to false
+	suite.cpu.SetFlag(processor.Z, false)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BEQ instruction
+	extraCycle := processor.BEQ(suite.cpu, processor.AddressInfo{Address: 0x1050})
+
+	assert.Equal(suite.T(), uint16(0x1000), suite.cpu.PC, "Expected PC to be 0x1000")
+	assert.Equal(suite.T(), uint8(0), suite.cpu.Cycles(), "Expected cycles to be 0")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBNE_Taken() {
+	// Set the Zero flag to false
+	suite.cpu.SetFlag(processor.Z, false)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BNE instruction
+	extraCycle := processor.BNE(suite.cpu, processor.AddressInfo{Address: 0x1050})
+
+	assert.Equal(suite.T(), uint16(0x1050), suite.cpu.PC, "Expected PC to be 0x1050")
+	assert.Equal(suite.T(), uint8(1), suite.cpu.Cycles(), "Expected cycles to be 1")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBNE_TakenAndPageCrossed() {
+	// Set the Zero flag to false
+	suite.cpu.SetFlag(processor.Z, false)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BNE instruction
+	extraCycle := processor.BNE(suite.cpu, processor.AddressInfo{Address: 0x2000, PageChanged: true})
+
+	assert.Equal(suite.T(), uint16(0x2000), suite.cpu.PC, "Expected PC to be 0x2000")
+	assert.Equal(suite.T(), uint8(2), suite.cpu.Cycles(), "Expected cycles to be 2")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBNE_NotTaken() {
+	// Set the Zero flag to true
+	suite.cpu.SetFlag(processor.Z, true)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BNE instruction
+	extraCycle := processor.BNE(suite.cpu, processor.AddressInfo{Address: 0x1050})
+
+	assert.Equal(suite.T(), uint16(0x1000), suite.cpu.PC, "Expected PC to be 0x1000")
+	assert.Equal(suite.T(), uint8(0), suite.cpu.Cycles(), "Expected cycles to be 0")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBPL_Taken() {
+	// Set the Negative flag to false
+	suite.cpu.SetFlag(processor.N, false)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BPL instruction
+	extraCycle := processor.BPL(suite.cpu, processor.AddressInfo{Address: 0x1050})
+
+	assert.Equal(suite.T(), uint16(0x1050), suite.cpu.PC, "Expected PC to be 0x1050")
+	assert.Equal(suite.T(), uint8(1), suite.cpu.Cycles(), "Expected cycles to be 1")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBPL_TakenAndPageCrossed() {
+	// Set the Negative flag to false
+	suite.cpu.SetFlag(processor.N, false)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BPL instruction
+	extraCycle := processor.BPL(suite.cpu, processor.AddressInfo{Address: 0x2000, PageChanged: true})
+
+	assert.Equal(suite.T(), uint16(0x2000), suite.cpu.PC, "Expected PC to be 0x2000")
+	assert.Equal(suite.T(), uint8(2), suite.cpu.Cycles(), "Expected cycles to be 2")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBPL_NotTaken() {
+	// Set the Negative flag to true
+	suite.cpu.SetFlag(processor.N, true)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BPL instruction
+	extraCycle := processor.BPL(suite.cpu, processor.AddressInfo{Address: 0x1050})
+
+	assert.Equal(suite.T(), uint16(0x1000), suite.cpu.PC, "Expected PC to be 0x1000")
+	assert.Equal(suite.T(), uint8(0), suite.cpu.Cycles(), "Expected cycles to be 0")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBMI_Taken() {
+	// Set the Negative flag to true
+	suite.cpu.SetFlag(processor.N, true)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BMI instruction
+	extraCycle := processor.BMI(suite.cpu, processor.AddressInfo{Address: 0x1050})
+
+	assert.Equal(suite.T(), uint16(0x1050), suite.cpu.PC, "Expected PC to be 0x1050")
+	assert.Equal(suite.T(), uint8(1), suite.cpu.Cycles(), "Expected cycles to be 1")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBMI_TakenAndPageCrossed() {
+	// Set the Negative flag to true
+	suite.cpu.SetFlag(processor.N, true)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BMI instruction
+	extraCycle := processor.BMI(suite.cpu, processor.AddressInfo{Address: 0x2000, PageChanged: true})
+
+	assert.Equal(suite.T(), uint16(0x2000), suite.cpu.PC, "Expected PC to be 0x2000")
+	assert.Equal(suite.T(), uint8(2), suite.cpu.Cycles(), "Expected cycles to be 2")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBMI_NotTaken() {
+	// Set the Negative flag to false
+	suite.cpu.SetFlag(processor.N, false)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BMI instruction
+	extraCycle := processor.BMI(suite.cpu, processor.AddressInfo{Address: 0x1050})
+
+	assert.Equal(suite.T(), uint16(0x1000), suite.cpu.PC, "Expected PC to be 0x1000")
+	assert.Equal(suite.T(), uint8(0), suite.cpu.Cycles(), "Expected cycles to be 0")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBVC_Taken() {
+	// Set the Overflow flag to false
+	suite.cpu.SetFlag(processor.V, false)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BVC instruction
+	extraCycle := processor.BVC(suite.cpu, processor.AddressInfo{Address: 0x1050})
+
+	assert.Equal(suite.T(), uint16(0x1050), suite.cpu.PC, "Expected PC to be 0x1050")
+	assert.Equal(suite.T(), uint8(1), suite.cpu.Cycles(), "Expected cycles to be 1")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBVC_TakenAndPageCrossed() {
+	// Set the Overflow flag to false
+	suite.cpu.SetFlag(processor.V, false)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BVC instruction
+	extraCycle := processor.BVC(suite.cpu, processor.AddressInfo{Address: 0x2000, PageChanged: true})
+
+	assert.Equal(suite.T(), uint16(0x2000), suite.cpu.PC, "Expected PC to be 0x2000")
+	assert.Equal(suite.T(), uint8(2), suite.cpu.Cycles(), "Expected cycles to be 2")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBVC_NotTaken() {
+	// Set the Overflow flag to true
+	suite.cpu.SetFlag(processor.V, true)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BVC instruction
+	extraCycle := processor.BVC(suite.cpu, processor.AddressInfo{Address: 0x1050})
+
+	assert.Equal(suite.T(), uint16(0x1000), suite.cpu.PC, "Expected PC to be 0x1000")
+	assert.Equal(suite.T(), uint8(0), suite.cpu.Cycles(), "Expected cycles to be 0")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBVS_Taken() {
+	// Set the Overflow flag to true
+	suite.cpu.SetFlag(processor.V, true)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BVS instruction
+	extraCycle := processor.BVS(suite.cpu, processor.AddressInfo{Address: 0x1050})
+
+	assert.Equal(suite.T(), uint16(0x1050), suite.cpu.PC, "Expected PC to be 0x1050")
+	assert.Equal(suite.T(), uint8(1), suite.cpu.Cycles(), "Expected cycles to be 1")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBVS_TakenAndPageCrossed() {
+	// Set the Overflow flag to true
+	suite.cpu.SetFlag(processor.V, true)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BVS instruction
+	extraCycle := processor.BVS(suite.cpu, processor.AddressInfo{Address: 0x2000, PageChanged: true})
+
+	assert.Equal(suite.T(), uint16(0x2000), suite.cpu.PC, "Expected PC to be 0x2000")
+	assert.Equal(suite.T(), uint8(2), suite.cpu.Cycles(), "Expected cycles to be 2")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBVS_NotTaken() {
+	// Set the Overflow flag to false
+	suite.cpu.SetFlag(processor.V, false)
+
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute BVS instruction
+	extraCycle := processor.BVS(suite.cpu, processor.AddressInfo{Address: 0x1050})
+
+	assert.Equal(suite.T(), uint16(0x1000), suite.cpu.PC, "Expected PC to be 0x1000")
+	assert.Equal(suite.T(), uint8(0), suite.cpu.Cycles(), "Expected cycles to be 0")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
 //
 // Jump Instructions
 //

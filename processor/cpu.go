@@ -36,6 +36,8 @@ type CPU struct {
 	SP     byte   // Stack Pointer (points to location on the bus within page 1)
 	PC     uint16 // Program Counter
 	Status byte   // Status Register
+
+	cycles uint8
 }
 
 // NewCPU creates a new CPU instance.
@@ -101,4 +103,16 @@ func (c *CPU) SetFlag(flag Flag, value bool) {
 func (c *CPU) SetZN(value byte) {
 	c.SetFlag(Z, value == 0x00)
 	c.SetFlag(N, value&0x80 > 0)
+}
+
+func (c *CPU) addBranchCycles(addressInfo AddressInfo) {
+	c.cycles++
+	if addressInfo.PageChanged {
+		c.cycles++
+	}
+}
+
+// Cycles returns the number of remaining cycles (or clock ticks) required to complete the current instruction.
+func (c *CPU) Cycles() uint8 {
+	return c.cycles
 }

@@ -369,6 +369,85 @@ func CPY(cpu *CPU, addressInfo AddressInfo) bool {
 // Branch Instructions
 //
 
+// BCC - Branch if Carry Clear
+// Function = PC = PC + 2 + memory (signed)
+func BCC(cpu *CPU, addressInfo AddressInfo) bool {
+	if !cpu.GetFlag(C) {
+		cpu.addBranchCycles(addressInfo)
+		cpu.PC = addressInfo.Address
+	}
+	return false
+}
+
+// BCS - Branch if Carry Set
+// Function = PC = PC + 2 + memory (signed)
+func BCS(cpu *CPU, addressInfo AddressInfo) bool {
+	if cpu.GetFlag(C) {
+		cpu.addBranchCycles(addressInfo)
+		cpu.PC = addressInfo.Address
+	}
+	return false
+}
+
+// BEQ - Branch if Equal
+// Function = PC = PC + 2 + memory (signed)
+func BEQ(cpu *CPU, addressInfo AddressInfo) bool {
+	if cpu.GetFlag(Z) {
+		cpu.addBranchCycles(addressInfo)
+		cpu.PC = addressInfo.Address
+	}
+	return false
+}
+
+// BNE - Branch if Not Equal
+// Function = PC = PC + 2 + memory (signed)
+func BNE(cpu *CPU, addressInfo AddressInfo) bool {
+	if !cpu.GetFlag(Z) {
+		cpu.addBranchCycles(addressInfo)
+		cpu.PC = addressInfo.Address
+	}
+	return false
+}
+
+// BPL - Branch if Positive
+// Function = PC = PC + 2 + memory (signed)
+func BPL(cpu *CPU, addressInfo AddressInfo) bool {
+	if !cpu.GetFlag(N) {
+		cpu.addBranchCycles(addressInfo)
+		cpu.PC = addressInfo.Address
+	}
+	return false
+}
+
+// BMI - Branch if Negative
+// Function = PC = PC + 2 + memory (signed)
+func BMI(cpu *CPU, addressInfo AddressInfo) bool {
+	if cpu.GetFlag(N) {
+		cpu.addBranchCycles(addressInfo)
+		cpu.PC = addressInfo.Address
+	}
+	return false
+}
+
+// BVC - Branch if Overflow Clear
+func BVC(cpu *CPU, addressInfo AddressInfo) bool {
+	if !cpu.GetFlag(V) {
+		cpu.addBranchCycles(addressInfo)
+		cpu.PC = addressInfo.Address
+	}
+	return false
+}
+
+// BVS - Branch if Overflow Set
+// Function = PC = PC + 2 + memory (signed)
+func BVS(cpu *CPU, addressInfo AddressInfo) bool {
+	if cpu.GetFlag(V) {
+		cpu.addBranchCycles(addressInfo)
+		cpu.PC = addressInfo.Address
+	}
+	return false
+}
+
 //
 // Jump Instructions
 //
