@@ -452,6 +452,68 @@ func BVS(cpu *CPU, addressInfo AddressInfo) bool {
 // Jump Instructions
 //
 
+// JMP - Jump
+// Function = PC = memory
+func JMP(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.PC = addressInfo.Address
+	return false
+}
+
+// JSR - Jump to Subroutine
+// Function:
+//
+//	push PC + 2 high byte to stack
+//	push PC + 2 low byte to stack
+//	PC = memory
+//
+// Note: the return address on the stack points 1 byte before the start of the next instruction. However, the
+// clock function will have already incremented the PC to start of the next instruction so we need to -1 here.
+func JSR(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.Push16(cpu.PC - 1)
+	cpu.PC = addressInfo.Address
+	return false
+}
+
+// RTS - Return from Subroutine
+// Function:
+//
+//	pull PC low byte from stack
+//	pull PC high byte from stack
+//	PC = PC + 1
+func RTS(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.PC = cpu.Pop16() + 1
+	return false
+}
+
+// BRK - Force Interrupt (IRQ)
+// Function:
+//
+//	push PC + 2 high byte to stack
+//	push PC + 2 low byte to stack
+//	push NV11DIZC flags to stack
+//	PC = ($FFFE)
+func BRK(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.Push16(cpu.PC)
+	cpu.Push(cpu.Status | 0x10) // 0x10 sets the Break flag to 1 (but only in the value pushed to the stack)
+	cpu.SetFlag(I, true)        // Set the "Interrupt Disable" flag
+	cpu.PC = cpu.Read16(0xFFFE) // Read a value from 0xFFFE and use this as the memory address to jump to
+	return false
+}
+
+// RTI - Return from Interrupt
+// Function:
+//
+//	pull NVxxDIZC flags from stack
+//	pull PC low byte from stack
+//	pull PC high byte from stack
+func RTI(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.Status = cpu.Pop()
+	cpu.SetFlag(B, false)
+	cpu.SetFlag(U, true)
+	cpu.PC = cpu.Pop16()
+	return false
+}
+
 //
 // Stack Instructions
 //

@@ -85,6 +85,13 @@ func (c *CPU) Write(addr uint16, data byte) {
 	c.bus.Write(addr, data)
 }
 
+// Write16 writes a 16-bit value to the bus at the specified address.
+// The value is written least significant byte first (little endian).
+func (c *CPU) Write16(addr uint16, data uint16) {
+	c.bus.Write(addr, uint8(data&0xFF))
+	c.bus.Write(addr+1, uint8(data>>8))
+}
+
 // GetFlag returns the value of a specific bit of the status register.
 func (c *CPU) GetFlag(flag Flag) bool {
 	return (c.Status & byte(flag)) > 0
@@ -115,4 +122,35 @@ func (c *CPU) addBranchCycles(addressInfo AddressInfo) {
 // Cycles returns the number of remaining cycles (or clock ticks) required to complete the current instruction.
 func (c *CPU) Cycles() uint8 {
 	return c.cycles
+}
+
+// Push pushes an 8-bit value onto the stack.
+func (c *CPU) Push(value uint8) {
+	// Remember that the stack is stored in page 1 (so we need to add 0x100 to the value of the stack pointer).
+	// Also, the stack pointer starts at 0xFD after a reset and grows down, so we need to decrement it after pushing.
+	c.Write(0x100|uint16(c.SP), value)
+	c.SP--
+}
+
+// Push16 pushes a 16-bit value onto the stack.
+// The 6502 is little endian (LSB first) but the stack grows down so we push the most significant byte first.
+func (c *CPU) Push16(value uint16) {
+	hi := uint8(value >> 8)
+	lo := uint8(value & 0xFF)
+	c.Push(hi)
+	c.Push(lo)
+}
+
+// Pop pops an 8-bit value off the stack.
+func (c *CPU) Pop() uint8 {
+	c.SP++
+	return c.Read(0x100 | uint16(c.SP))
+}
+
+// Pop16 pops a 16-bit value off the stack.
+// The value is assumed to be stored least significant byte first (little endian).
+func (c *CPU) Pop16() uint16 {
+	lo := uint16(c.Pop())
+	hi := uint16(c.Pop())
+	return hi<<8 | lo
 }

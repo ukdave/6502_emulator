@@ -71,6 +71,18 @@ func TestWrite(t *testing.T) {
 	assert.Equal(t, uint8(0xAB), bus.Read(0x1234))
 }
 
+func TestWrite16(t *testing.T) {
+	// Create a new CPU
+	bus := bus.NewSimpleBus()
+	cpu := processor.NewCPU(bus)
+
+	// Write a value to the bus
+	cpu.Write16(0x1234, 0xABCD)
+
+	assert.Equal(t, uint8(0xCD), bus.Read(0x1234))
+	assert.Equal(t, uint8(0xAB), bus.Read(0x1235))
+}
+
 func TestGetFlag(t *testing.T) {
 	// Create a new CPU
 	cpu := &processor.CPU{}
@@ -152,4 +164,60 @@ func TestSetZN(t *testing.T) {
 
 	assert.False(t, cpu.GetFlag(processor.Z), "Zero flag should be clear")
 	assert.True(t, cpu.GetFlag(processor.N), "Negative flag should be set")
+}
+
+func TestPush(t *testing.T) {
+	// Create a new CPU
+	bus := bus.NewSimpleBus()
+	cpu := processor.NewCPU(bus)
+
+	// Push a value on to the stack
+	cpu.Push(0x12)
+
+	// The stack starts at 0x01FD, so this is where our value should be stored
+	assert.Equal(t, uint8(0x12), bus.Read(0x01FD))
+
+	// The stack pointer should now be at 0xFC
+	assert.Equal(t, uint8(0xFC), cpu.SP, "Expected the Stack Pointer to be 0xFC")
+}
+
+func TestPush16(t *testing.T) {
+	// Create a new CPU
+	bus := bus.NewSimpleBus()
+	cpu := processor.NewCPU(bus)
+
+	// Push a value on to the stack
+	cpu.Push16(0x1234)
+
+	// The stack starts at 0x01FD and grows down, so the start of our 16-bit value should
+	// stored at 0x01FC with the least significant byte appearing first.
+	assert.Equal(t, uint8(0x34), bus.Read(0x01FC))
+	assert.Equal(t, uint8(0x12), bus.Read(0x01FD))
+
+	// The stack pointer should now be at 0xFB
+	assert.Equal(t, uint8(0xFB), cpu.SP, "Expected the Stack Pointer to be 0xFB")
+}
+
+func TestPop(t *testing.T) {
+	// Create a new CPU
+	bus := bus.NewSimpleBus()
+	cpu := processor.NewCPU(bus)
+
+	// Push a value on to the stack
+	cpu.Push(0x12)
+
+	assert.Equal(t, uint8(0x12), cpu.Pop(), "Expected to pop 0x12 off the stack")
+	assert.Equal(t, uint8(0xFD), cpu.SP, "Expected the Stack Pointer to be 0xFD")
+}
+
+func TestPop16(t *testing.T) {
+	// Create a new CPU
+	bus := bus.NewSimpleBus()
+	cpu := processor.NewCPU(bus)
+
+	// Push a value on to the stack
+	cpu.Push16(0x1234)
+
+	assert.Equal(t, uint16(0x1234), cpu.Pop16(), "Expected to pop 0x1234 off the stack")
+	assert.Equal(t, uint8(0xFD), cpu.SP, "Expected the Stack Pointer to be 0xFD")
 }

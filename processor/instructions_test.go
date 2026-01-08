@@ -1925,6 +1925,85 @@ func (suite *InstructionsSuite) TestBVS_NotTaken() {
 // Jump Instructions
 //
 
+func (suite *InstructionsSuite) TestJMP() {
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1000
+
+	// Execute JMP instruction
+	extraCycle := processor.JMP(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint16(0x2000), suite.cpu.PC, "Expected PC to be 0x2000")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestJSR() {
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1005
+
+	// Execute JSR instruction
+	extraCycle := processor.JSR(suite.cpu, processor.AddressInfo{Address: 0x2000})
+
+	assert.Equal(suite.T(), uint16(0x2000), suite.cpu.PC, "Expected PC to be 0x2000")
+	assert.Equal(suite.T(), uint8(0xFB), suite.cpu.SP, "Expected stack pointer to be 0xFB")
+	assert.Equal(suite.T(), uint16(0x1004), suite.cpu.Pop16(), "Expected stack to contain 0x1004")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestRTS() {
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x2000
+
+	// Push an address onto the stack
+	suite.cpu.Push16(0x1004)
+
+	// Execute RTS instruction
+	extraCycle := processor.RTS(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint16(0x1005), suite.cpu.PC, "Expected PC to be 0x1005")
+	assert.Equal(suite.T(), uint8(0xFD), suite.cpu.SP, "Expected stack pointer to be 0xFD")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestBRK() {
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x2000
+
+	// Write a 16-bit value to memory to 0xFFFE
+	suite.cpu.Write16(0xFFFE, 0x1005)
+
+	// Read current status flags
+	statusFlags := suite.cpu.Status
+
+	// Execute BRK instruction
+	extraCycle := processor.BRK(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint16(0x1005), suite.cpu.PC, "Expected PC to be 0x1005")
+	assert.Equal(suite.T(), true, suite.cpu.GetFlag(processor.I), "Disable Interrupt flag should be true")
+	assert.Equal(suite.T(), uint8(0xFA), suite.cpu.SP, "Expected stack pointer to be 0xFA (3 bytes pushed)")
+	assert.Equal(suite.T(), statusFlags|0x10, suite.cpu.Pop(), "Expected stack to contain status flags with B set")
+	assert.Equal(suite.T(), uint16(0x2000), suite.cpu.Pop16(), "Expected stack contain original PC value (0x2000)")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestRTI() {
+	// Set the Program Counter to a known value
+	suite.cpu.PC = 0x1005
+
+	// Push an address and status flags onto the stack
+	suite.cpu.Push16(0x2000)
+	suite.cpu.Push(0xB7)
+
+	// Execute RTI instruction
+	extraCycle := processor.RTI(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint16(0x2000), suite.cpu.PC, "Expected PC to be 0x2000")
+	assert.Equal(suite.T(), false, suite.cpu.GetFlag(processor.B), "Break flag should be false")
+	assert.Equal(suite.T(), true, suite.cpu.GetFlag(processor.U), "Unused flag should be true")
+	assert.Equal(suite.T(), uint8(0xA7), suite.cpu.Status, "Expected status flags to be 0xA7")
+	assert.Equal(suite.T(), uint8(0xFD), suite.cpu.SP, "Expected stack pointer to be 0xFD")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
 //
 // Stack Instructions
 //
