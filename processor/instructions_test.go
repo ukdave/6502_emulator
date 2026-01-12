@@ -2008,6 +2008,142 @@ func (suite *InstructionsSuite) TestRTI() {
 // Stack Instructions
 //
 
+func (suite *InstructionsSuite) TestPHA() {
+	// Set A to a known value
+	suite.cpu.A = 0x05
+
+	// Execute PHA instruction
+	extraCycle := processor.PHA(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint8(0xFC), suite.cpu.SP, "Expected stack pointer to be 0xFC (1 byte pushed)")
+	assert.Equal(suite.T(), uint8(0x05), suite.cpu.Pop(), "Expected stack contain original A value (0x05)")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestPLA() {
+	// Set A to a known value
+	suite.cpu.A = 0x00
+
+	// Push a known 8-bit value on the the stack
+	suite.cpu.Push(0x12)
+
+	// Execute PLA instruction
+	extraCycle := processor.PLA(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint8(0x12), suite.cpu.A, "Accumulator should be 0x12")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestPLA_ZeroValue() {
+	// Set A to a known value
+	suite.cpu.A = 0x12
+
+	// Push a known 8-bit value on the the stack
+	suite.cpu.Push(0x00)
+
+	// Execute PLA instruction
+	extraCycle := processor.PLA(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint8(0x00), suite.cpu.A, "Accumulator should be 0x00")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestPLA_NegativeValue() {
+	// Set A to a known value
+	suite.cpu.A = 0x00
+
+	// Push a known 8-bit value on the the stack
+	suite.cpu.Push(0xFF)
+
+	// Execute PLA instruction
+	extraCycle := processor.PLA(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint8(0xFF), suite.cpu.A, "Accumulator should be 0xFF")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestPHP() {
+	// Read current status flags
+	statusFlags := suite.cpu.Status
+
+	// Execute PHP instruction
+	extraCycle := processor.PHP(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint8(0xFC), suite.cpu.SP, "Expected stack pointer to be 0xFC (1 byte pushed)")
+	assert.Equal(suite.T(), statusFlags|0x10, suite.cpu.Pop(), "Expected stack to contain status flags with B set")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestPLP() {
+	// Push some status flags onto the stack
+	suite.cpu.Push(0xB7)
+
+	// Execute PLP instruction
+	extraCycle := processor.PLP(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), false, suite.cpu.GetFlag(processor.B), "Break flag should be false")
+	assert.Equal(suite.T(), true, suite.cpu.GetFlag(processor.U), "Unused flag should be true")
+	assert.Equal(suite.T(), uint8(0xA7), suite.cpu.Status, "Expected status flags to be 0xA7")
+	assert.Equal(suite.T(), uint8(0xFD), suite.cpu.SP, "Expected stack pointer to be 0xFD")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestTXS() {
+	// Set the X Register to a known value
+	suite.cpu.X = 0x12
+
+	// Execute TXS instruction
+	extraCycle := processor.TXS(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint8(0x12), suite.cpu.SP, "Expected stack pointer to be 0x12")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestTSX() {
+	// Set the stack pointer to a known value
+	suite.cpu.SP = 0x12
+
+	// Execute TSX instruction
+	extraCycle := processor.TSX(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint8(0x12), suite.cpu.X, "X Register should be 0x12")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestTSX_ZeroValue() {
+	// Set the stack pointer to a known value
+	suite.cpu.SP = 0x00
+
+	// Execute TSX instruction
+	extraCycle := processor.TSX(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint8(0x00), suite.cpu.X, "X Register should be 0x00")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be true")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestTSX_NegativeValue() {
+	// Set the stack pointer to a known value
+	suite.cpu.SP = 0xFF
+
+	// Execute TSX instruction
+	extraCycle := processor.TSX(suite.cpu, processor.AddressInfo{})
+
+	assert.Equal(suite.T(), uint8(0xFF), suite.cpu.X, "X Register should be 0xFF")
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.Z), "Zero flag should be false")
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.N), "Negative flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
 //
 // Flag Instructions
 //

@@ -518,6 +518,69 @@ func RTI(cpu *CPU, addressInfo AddressInfo) bool {
 // Stack Instructions
 //
 
+// PHA - Push A
+// Function:
+//
+//	($0100 + SP) = A
+//	SP = SP - 1
+func PHA(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.Push(cpu.A)
+	return false
+}
+
+// PLA - Pull A
+// Function:
+//
+//	SP = SP + 1
+//	A = ($0100 + SP)
+//
+// Flags Out: Z, N
+func PLA(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.A = cpu.Pop()
+	cpu.SetZN(cpu.A)
+	return false
+}
+
+// PHP - Push Processor Status (status flags)
+// Function:
+//
+//	($0100 + SP) = NV11DIZC
+//	SP = SP - 1
+func PHP(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.Push(cpu.Status | 0x10) // 0x10 sets the Break flag to 1 (but only in the value pushed to the stack)
+	return false
+}
+
+// PLP - Pull Processor Status (status flags)
+// Function:
+//
+//	SP = SP + 1
+//	NVxxDIZC = ($0100 + SP)
+//
+// Flags out: C, Z, I, D, V, N
+func PLP(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.Status = cpu.Pop()
+	cpu.SetFlag(B, false)
+	cpu.SetFlag(U, true)
+	return false
+}
+
+// TXS - Transfer X to Stack Pointer
+// Function: SP = X
+func TXS(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.SP = cpu.X
+	return false
+}
+
+// TSX - Transfer Stack Pointer to X
+// Function: SP = X
+// Flags Out: Z, N
+func TSX(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.X = cpu.SP
+	cpu.SetZN(cpu.X)
+	return false
+}
+
 //
 // Flag Instructions
 //
