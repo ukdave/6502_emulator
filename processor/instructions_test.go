@@ -2148,6 +2148,83 @@ func (suite *InstructionsSuite) TestTSX_NegativeValue() {
 // Flag Instructions
 //
 
+func (suite *InstructionsSuite) TestCLC() {
+	// Set the Carry flag
+	suite.cpu.SetFlag(processor.C, true)
+
+	// Execute the CLC instruction
+	extraCycle := processor.CLC(suite.cpu, processor.AddressInfo{})
+
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.C), "Clear flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestSEC() {
+	// Clear the Carry flag
+	suite.cpu.SetFlag(processor.C, false)
+
+	// Execute the SEC instruction
+	extraCycle := processor.SEC(suite.cpu, processor.AddressInfo{})
+
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.C), "Clear flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestCLI() {
+	// Set the Disable Interrupt flag
+	suite.cpu.SetFlag(processor.I, true)
+
+	// Execute the CLI instruction
+	extraCycle := processor.CLI(suite.cpu, processor.AddressInfo{})
+
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.I), "Disable Interrupt flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestSEI() {
+	// Clear the Disable Interrupt flag
+	suite.cpu.SetFlag(processor.I, false)
+
+	// Execute the SEI instruction
+	extraCycle := processor.SEI(suite.cpu, processor.AddressInfo{})
+
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.I), "Disable Interrupt flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestCLD() {
+	// Set the Decimal flag
+	suite.cpu.SetFlag(processor.D, true)
+
+	// Execute the CLD instruction
+	extraCycle := processor.CLD(suite.cpu, processor.AddressInfo{})
+
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.D), "Decimal flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestSED() {
+	// Clear the Decimal flag
+	suite.cpu.SetFlag(processor.D, false)
+
+	// Execute the SED instruction
+	extraCycle := processor.SED(suite.cpu, processor.AddressInfo{})
+
+	assert.True(suite.T(), suite.cpu.GetFlag(processor.D), "Decimal flag should be true")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
+func (suite *InstructionsSuite) TestCLV() {
+	// Set the Overflow flag
+	suite.cpu.SetFlag(processor.V, true)
+
+	// Execute the CLV instruction
+	extraCycle := processor.CLV(suite.cpu, processor.AddressInfo{})
+
+	assert.False(suite.T(), suite.cpu.GetFlag(processor.V), "Overflow flag should be false")
+	assert.False(suite.T(), extraCycle, "Expected extraCycle to be false")
+}
+
 //
 // Other Instructions
 //

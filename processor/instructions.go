@@ -585,6 +585,62 @@ func TSX(cpu *CPU, addressInfo AddressInfo) bool {
 // Flag Instructions
 //
 
+// CLC - Clear Carry
+// Function:  C = 0
+// Flags Out: C
+func CLC(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.SetFlag(C, false)
+	return false
+}
+
+// SEC - Set Carry
+// Function:  C = 1
+// Flags Out: C
+func SEC(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.SetFlag(C, true)
+	return false
+}
+
+// CLI - Clear Interrupt Disable
+// Function:  I = 0
+// Flags Out: I
+func CLI(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.SetFlag(I, false)
+	return false
+}
+
+// SEI - Set Interrupt Disable
+// Function:  I = 0
+// Flags Out: I
+func SEI(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.SetFlag(I, true)
+	return false
+}
+
+// CLD - Clear Decimal
+// Function:  D = 0
+// Flags Out: D
+func CLD(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.SetFlag(D, false)
+	return false
+}
+
+// SED - Set Decimal
+// Function:  D = 1
+// Flags Out: D
+func SED(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.SetFlag(D, true)
+	return false
+}
+
+// CLV - Clear Overflow
+// Function:  V = 0
+// Flags Out: V
+func CLV(cpu *CPU, addressInfo AddressInfo) bool {
+	cpu.SetFlag(V, false)
+	return false
+}
+
 //
 // Other Instructions
 //
