@@ -63,8 +63,48 @@ func (c *CPU) ResetVector() uint16 {
 	return c.Read16(0xFFFC)
 }
 
+// Clock advances the CPU by a single clock cycle.
+//
+// 6502 instructions take a variable number of cycles to complete. On real hardware, each cycle performs a small
+// portion of the instruction via internal micro-operations. This emulator executes the full instruction atomically,
+// but still models timing by tracking the number of cycles the instruction consumes. Each call to Clock decrements
+// the remaining cycle count, and when it reaches zero the instruction is considered complete.
 func (c *CPU) Clock() {
-	// TODO
+	if c.cycles > 0 {
+		c.cycles--
+		return
+	}
+
+	opcode := c.Read(c.PC)
+	op := operations[opcode]
+
+	// Get the address information/operand using the appropriate address mode for this operation.
+	// Note that not all instructions require an operand (e.g. NOP, INX, CLC).
+	addressInfo := op.AddressMode(c)
+
+	// Increment the Program Counter (PC) by the size of this operation. We do this *before* executing the
+	// instruction as some instructions may alter PC directly (e.g. branch instructions).
+	c.PC += uint16(op.Size)
+
+	// Get the starting number of cycles for this operation
+	c.cycles = op.Cycles
+
+	// Perform operation
+	extraCycle := op.Instruction(c, addressInfo)
+
+	// Several addressing modes have the potential to require an additional clock cycle if they cross a page
+	// boundary. This is combined with several instructions that enable this additional clock cycle. If both
+	// the instruction and address function return true, then an additional clock cycle is required.
+	//
+	// Branch instructions require an additional clock cycle if the branch is taken, and a second additional
+	// clock cycle if the page boundary is crossed. Our branch instruction functions always return false and
+	// handle the addition any extra cycles themselves.
+	if extraCycle && addressInfo.PageChanged {
+		c.cycles++
+	}
+
+	// Decrement the number of cycles remaining for this instruction
+	c.cycles--
 }
 
 // Read reads an 8-bit value from the bus at the specified address.

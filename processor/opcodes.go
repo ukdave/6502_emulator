@@ -30,3 +30,8 @@ var operations = [...]Operation{
 	{CPX, IMM, 2, 2}, {SBC, INDX, 2, 6}, {XXX, IMP, 1, 1}, {XXX, IMP, 1, 1}, {CPX, ZP0, 2, 3}, {SBC, ZP0, 2, 3}, {INC, ZP0, 2, 5}, {XXX, IMP, 1, 1}, {INX, IMP, 1, 2}, {SBC, IMM, 2, 2}, {NOP, IMP, 1, 2}, {XXX, IMP, 1, 1}, {CPX, ABS, 3, 4}, {SBC, ABS, 3, 4}, {INC, ABS, 3, 6}, {XXX, IMP, 1, 1},
 	{BEQ, REL, 2, 2}, {SBC, INDY, 2, 5}, {XXX, IMP, 1, 1}, {XXX, IMP, 1, 1}, {XXX, IMP, 1, 1}, {SBC, ZPX, 2, 4}, {INC, ZPX, 2, 6}, {XXX, IMP, 1, 1}, {SED, IMP, 1, 2}, {SBC, ABY, 3, 4}, {XXX, IMP, 1, 1}, {XXX, IMP, 1, 1}, {XXX, IMP, 1, 1}, {SBC, ABX, 3, 4}, {INC, ABX, 3, 7}, {XXX, IMP, 1, 1},
 }
+
+// GetOperation returns the operation information for the specified opcode
+func (c *CPU) GetOperation(opcode uint8) Operation {
+	return operations[opcode]
+}

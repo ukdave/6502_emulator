@@ -38,6 +38,34 @@ func TestResetVector(t *testing.T) {
 	assert.Equal(t, uint16(0x1234), cpu.ResetVector(), "Reset Vector should be 0x1234")
 }
 
+func TestClock(t *testing.T) {
+	bus := bus.NewSimpleBus()
+
+	// Set the value of the reset vector to 0x8000. This is where our program will start
+	bus.Write(0xFFFC, 0x00)
+	bus.Write(0xFFFD, 0x80)
+
+	// Write the instruction "LDA #$05" to memory starting at 0x8000.
+	// A9 = opcode for LDA immediate
+	// 05 = the literal value
+	bus.Write(0x8000, 0xA9)
+	bus.Write(0x8001, 0x05)
+
+	// Create a new CPU and check initial state
+	cpu := processor.NewCPU(bus)
+	assert.Equal(t, uint8(0x00), cpu.A, "Expected the Accumulator to be 0x00")
+	assert.Equal(t, uint16(0x8000), cpu.PC, "Expected the Program Counter to be 0x8000")
+
+	// This instruction should take 2 clock cycles to complete
+	cpu.Clock()
+	cpu.Clock()
+
+	// Check CPU state after executing the instruction
+	assert.Equal(t, uint8(0x05), cpu.A, "Expected the Accumulator to be 0x05")
+	assert.Equal(t, uint16(0x8002), cpu.PC, "Expected the Program Counter to be 0x8002")
+	assert.Equal(t, uint8(0), cpu.Cycles(), "Expected Cycles to be 0")
+}
+
 func TestRead(t *testing.T) {
 	bus := bus.NewSimpleBus()
 	bus.Write(0x1234, 0xAB)
