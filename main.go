@@ -2,12 +2,24 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/ukdave/6502_emulator/bus"
 	"github.com/ukdave/6502_emulator/processor"
+	"github.com/ukdave/6502_emulator/tui"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {
+	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("Alas, there's been an error: %v", err)
+		os.Exit(1)
+	}
+}
+
+func initialModel() *tui.Model {
 	// Create a new bus
 	bus := bus.NewSimpleBus()
 
@@ -16,46 +28,15 @@ func main() {
 	bus.Write(0xFFFD, 0x80)
 
 	// Write a very simple program to memory starting at 0x8000.
-	// The program consists of 4 instructions that does 5+3 and stores the answer at 0x10.
-	bus.Write(0x8000, 0xA9) // LDA #$05
-	bus.Write(0x8001, 0x05)
-	bus.Write(0x8002, 0x18) // CLC
-	bus.Write(0x8003, 0x69) // ADC #$03
-	bus.Write(0x8004, 0x03)
-	bus.Write(0x8005, 0x85)
-	bus.Write(0x8006, 0x10) // STA $10
+	// This program will multiply 10 (0x0A) by 3 (0x03) using repeated addition.
+	bytes := []byte{
+		0xA2, 0x0A, 0x8E, 0x00, 0x00, 0xA2, 0x03, 0x8E, 0x01, 0x00, 0xAC, 0x00, 0x00, 0xA9, 0x00, 0x18,
+		0x6D, 0x01, 0x00, 0x88, 0xD0, 0xFA, 0x8D, 0x02, 0x00, 0xEA, 0xEA, 0xEA}
+	for i, b := range bytes {
+		bus.Write(0x8000+uint16(i), b)
+	}
 
 	// Create a new CPU
 	cpu := processor.NewCPU(bus)
-	for range 4 {
-		printInstruction(cpu)
-		execute(cpu)
-	}
-	printInstruction(cpu)
-	fmt.Printf("0x10 = %02X", bus.Read(0x10))
-}
-
-func execute(cpu *processor.CPU) {
-	for {
-		cpu.Clock()
-		if cpu.Cycles() == 0 {
-			break
-		}
-	}
-}
-
-func printInstruction(cpu *processor.CPU) {
-	opcode := cpu.Read(cpu.PC)
-	op := cpu.GetOperation(opcode)
-	b0 := fmt.Sprintf("%02X", cpu.Read(cpu.PC+0))
-	b1 := fmt.Sprintf("%02X", cpu.Read(cpu.PC+1))
-	b2 := fmt.Sprintf("%02X", cpu.Read(cpu.PC+2))
-	if op.Size < 2 {
-		b1 = "  "
-	}
-	if op.Size < 3 {
-		b2 = "  "
-	}
-	fmt.Printf("%4X  %s %s %s %27s A:%02X X:%02X Y:%02X SP:%02X Flags:%08b\n",
-		cpu.PC, b0, b1, b2, "", cpu.A, cpu.X, cpu.Y, cpu.SP, cpu.Status)
+	return tui.NewModel(cpu)
 }
