@@ -63,6 +63,18 @@ func (c *CPU) ResetVector() uint16 {
 	return c.Read16(0xFFFC)
 }
 
+// IRQVector returns the 16-bit address read from the 6502 IRQ/BRK vector ($FFFE–$FFFF), which is loaded into
+// the program counter on an IRQ or BRK.
+func (c *CPU) IRQVector() uint16 {
+	return c.Read16(0xFFFE)
+}
+
+// NMIVector returns the 16-bit address read from the 6502 NMI vector ($FFFA–$FFFB), which is loaded into
+// the program counter on a non-maskable interrupt.
+func (c *CPU) NMIVector() uint16 {
+	return c.Read16(0xFFFA)
+}
+
 // Clock advances the CPU by a single clock cycle.
 //
 // 6502 instructions take a variable number of cycles to complete. On real hardware, each cycle performs a small
@@ -105,6 +117,31 @@ func (c *CPU) Clock() {
 
 	// Decrement the number of cycles remaining for this instruction
 	c.cycles--
+}
+
+// IRQ performs an Interrupt Request (IRQ) sequence.
+// The current Program Counter and status flags are pushed onto the stack and then we jump to the address
+// stored in the IRQ vector.
+func (c *CPU) IRQ() {
+	// Only run if the Disable Interrupts flag is clear
+	if !c.GetFlag(I) {
+		c.Push16(c.PC)
+		c.Push(c.Status &^ 0x10) // 0x10 clears the Break flag to 1 (but only in the value pushed to the stack)
+		c.SetFlag(I, true)       // Set the "Interrupt Disable" flag
+		c.PC = c.IRQVector()
+		c.cycles += 7
+	}
+}
+
+// NMI performs a Non-Maskable Interrupt (NMI) sequence.
+// The current Program Counter and status flags are pushed onto the stack and then we jump to the address
+// stored in the NMI vector.
+func (c *CPU) NMI() {
+	c.Push16(c.PC)
+	c.Push(c.Status &^ 0x10) // 0x10 clears the Break flag to 1 (but only in the value pushed to the stack)
+	c.SetFlag(I, true)       // Set the "Interrupt Disable" flag
+	c.PC = c.NMIVector()
+	c.cycles += 7
 }
 
 // Read reads an 8-bit value from the bus at the specified address.

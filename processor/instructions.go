@@ -496,7 +496,7 @@ func BRK(cpu *CPU, addressInfo AddressInfo) bool {
 	cpu.Push16(cpu.PC)
 	cpu.Push(cpu.Status | 0x10) // 0x10 sets the Break flag to 1 (but only in the value pushed to the stack)
 	cpu.SetFlag(I, true)        // Set the "Interrupt Disable" flag
-	cpu.PC = cpu.Read16(0xFFFE) // Read a value from 0xFFFE and use this as the memory address to jump to
+	cpu.PC = cpu.IRQVector()    // Read a value from 0xFFFE and use this as the memory address to jump to
 	return false
 }
 

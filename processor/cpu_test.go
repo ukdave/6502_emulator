@@ -27,7 +27,7 @@ func TestNewCPU(t *testing.T) {
 }
 
 func TestResetVector(t *testing.T) {
-	// Write starting value (0x1234) for PC to 0xFFFC
+	// Write value (0x1234) for PC to 0xFFFC
 	bus := bus.NewSimpleBus()
 	bus.Write(0xFFFC, 0x34)
 	bus.Write(0xFFFD, 0x12)
@@ -36,6 +36,30 @@ func TestResetVector(t *testing.T) {
 	cpu := processor.NewCPU(bus)
 
 	assert.Equal(t, uint16(0x1234), cpu.ResetVector(), "Reset Vector should be 0x1234")
+}
+
+func IRQVector(t *testing.T) {
+	// Write value (0x1234) for PC to 0xFFFE
+	bus := bus.NewSimpleBus()
+	bus.Write(0xFFFE, 0x34)
+	bus.Write(0xFFFF, 0x12)
+
+	// Create a new CPU
+	cpu := processor.NewCPU(bus)
+
+	assert.Equal(t, uint16(0x1234), cpu.IRQVector(), "Reset Vector should be 0x1234")
+}
+
+func NMIVector(t *testing.T) {
+	// Write value (0x1234) for PC to 0xFFFA
+	bus := bus.NewSimpleBus()
+	bus.Write(0xFFFA, 0x34)
+	bus.Write(0xFFFB, 0x12)
+
+	// Create a new CPU
+	cpu := processor.NewCPU(bus)
+
+	assert.Equal(t, uint16(0x1234), cpu.NMIVector(), "Reset Vector should be 0x1234")
 }
 
 func TestClock(t *testing.T) {
@@ -64,6 +88,75 @@ func TestClock(t *testing.T) {
 	assert.Equal(t, uint8(0x05), cpu.A, "Expected the Accumulator to be 0x05")
 	assert.Equal(t, uint16(0x8002), cpu.PC, "Expected the Program Counter to be 0x8002")
 	assert.Equal(t, uint8(0), cpu.Cycles(), "Expected Cycles to be 0")
+}
+
+func TestIRQ_Enabled(t *testing.T) {
+	bus := bus.NewSimpleBus()
+	cpu := processor.NewCPU(bus)
+
+	// Set the Program Counter to a known value
+	cpu.PC = 0x2000
+
+	// Write a 16-bit value to memory to 0xFFFE
+	cpu.Write16(0xFFFE, 0x1005)
+
+	// Enable interrupts
+	cpu.SetFlag(processor.I, false)
+
+	// Read current status flags
+	statusFlags := cpu.Status
+
+	// Trigger IRQ
+	cpu.IRQ()
+
+	assert.Equal(t, uint16(0x1005), cpu.PC, "Expected PC to be 0x1005")
+	assert.Equal(t, true, cpu.GetFlag(processor.I), "Disable Interrupt flag should be true")
+	assert.Equal(t, uint8(0xFA), cpu.SP, "Expected stack pointer to be 0xFA (3 bytes pushed)")
+	assert.Equal(t, statusFlags&^0x10, cpu.Pop(), "Expected stack to contain status flags with B clear")
+	assert.Equal(t, uint16(0x2000), cpu.Pop16(), "Expected stack contain original PC value (0x2000)")
+}
+
+func TestIRQ_Disabled(t *testing.T) {
+	bus := bus.NewSimpleBus()
+	cpu := processor.NewCPU(bus)
+
+	// Set the Program Counter to a known value
+	cpu.PC = 0x2000
+
+	// Write a 16-bit value to memory to 0xFFFE
+	cpu.Write16(0xFFFE, 0x1005)
+
+	// Disable interrupts
+	cpu.SetFlag(processor.I, true)
+
+	// Trigger IRQ
+	cpu.IRQ()
+
+	assert.Equal(t, uint16(0x2000), cpu.PC, "Expected PC to be 0x2000")
+	assert.Equal(t, uint8(0xFD), cpu.SP, "Expected stack pointer to be 0xFD (nothing pushed)")
+}
+
+func TestNMI(t *testing.T) {
+	bus := bus.NewSimpleBus()
+	cpu := processor.NewCPU(bus)
+
+	// Set the Program Counter to a known value
+	cpu.PC = 0x2000
+
+	// Write a 16-bit value to memory to 0xFFFA
+	cpu.Write16(0xFFFA, 0x1005)
+
+	// Read current status flags
+	statusFlags := cpu.Status
+
+	// Trigger NMI
+	cpu.NMI()
+
+	assert.Equal(t, uint16(0x1005), cpu.PC, "Expected PC to be 0x1005")
+	assert.Equal(t, true, cpu.GetFlag(processor.I), "Disable Interrupt flag should be true")
+	assert.Equal(t, uint8(0xFA), cpu.SP, "Expected stack pointer to be 0xFA (3 bytes pushed)")
+	assert.Equal(t, statusFlags&^0x10, cpu.Pop(), "Expected stack to contain status flags with B clear")
+	assert.Equal(t, uint16(0x2000), cpu.Pop16(), "Expected stack contain original PC value (0x2000)")
 }
 
 func TestRead(t *testing.T) {
