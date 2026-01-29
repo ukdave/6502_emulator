@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -12,14 +13,43 @@ import (
 )
 
 func main() {
-	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
+	binaryPath := parseArgs()
+
+	// Create and start the TUI program
+	p := tea.NewProgram(initialModel(binaryPath), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
 		os.Exit(1)
 	}
 }
 
-func initialModel() *tui.Model {
+func parseArgs() string {
+	// Optional help flags
+	help := flag.Bool("help", false, "Show help")
+	flag.BoolVar(help, "h", false, "Show help (shorthand)")
+
+	// Parse flags
+	flag.Parse()
+
+	// Handle help
+	if *help {
+		fmt.Printf("Usage: %s [options] [binary-file]\n", os.Args[0])
+		fmt.Println("Options:")
+		flag.PrintDefaults()
+		os.Exit(0)
+	}
+
+	// Positional argument (binary file) is optional
+	binaryPath := ""
+	args := flag.Args()
+	if len(args) > 0 {
+		binaryPath = args[0]
+	}
+
+	return binaryPath
+}
+
+func initialModel(binaryPath string) *tui.Model {
 	// Create a new bus
 	bus := bus.NewSimpleBus()
 
@@ -27,13 +57,16 @@ func initialModel() *tui.Model {
 	bus.Write(0xFFFC, 0x00)
 	bus.Write(0xFFFD, 0x80)
 
-	// Write a very simple program to memory starting at 0x8000.
-	// This program will multiply 10 (0x0A) by 3 (0x03) using repeated addition.
-	bytes := []byte{
-		0xA2, 0x0A, 0x8E, 0x00, 0x00, 0xA2, 0x03, 0x8E, 0x01, 0x00, 0xAC, 0x00, 0x00, 0xA9, 0x00, 0x18,
-		0x6D, 0x01, 0x00, 0x88, 0xD0, 0xFA, 0x8D, 0x02, 0x00, 0xEA, 0xEA, 0xEA}
-	for i, b := range bytes {
-		bus.Write(0x8000+uint16(i), b)
+	// If a binary path was provided, load that file into memory at 0x8000
+	if binaryPath != "" {
+		binFile, err := os.ReadFile(binaryPath)
+		if err != nil {
+			fmt.Printf("Failed to read binary file: %v\n", err)
+			os.Exit(1)
+		}
+		for i, b := range binFile {
+			bus.Write(0x8000+uint16(i), b)
+		}
 	}
 
 	// Create a new CPU

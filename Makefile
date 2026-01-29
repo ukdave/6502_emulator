@@ -1,6 +1,8 @@
-.PHONY: all deps fmt vet test cover build clean
+.PHONY: default all deps fmt vet test cover build programs clean
 
-all: deps fmt vet staticcheck test build
+default: deps fmt vet staticcheck test build
+
+all: default programs
 
 deps:
 	go mod download
@@ -23,5 +25,9 @@ cover:
 build:
 	go build -o 6502_emulator main.go
 
+programs:
+	make -C programs
+
 clean:
 	rm -f 6502_emulator cover.out
+	make -C programs clean

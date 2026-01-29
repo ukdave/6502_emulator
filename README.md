@@ -72,3 +72,33 @@ make
 # or
 go run main.go example.bin
 ```
+
+## Writing 6502 programs
+
+Programs can be written in assembly, built into a binary (.bin) file using the [cc65](https://github.com/cc65/cc65) toolchain, and then loaded into the emulator.
+
+```bash
+brew install cc65
+```
+
+Some sample programs are provided in the `programs/` directory.
+
+```bash
+# build all programs
+make programs
+```
+
+All of the included sample programs are designed to be loaded at memory address 0x8000.
+
+Steps to build an assembly program:
+
+```bash
+# Assemble the assembly code into machine code (creates a re-locatable object file)
+ca65 -o my_program.o my_program.s
+
+# Link our machine code into a binary file with everything laid out in specific memory locations using the linker configuration
+ld65 -o my_program.bin -C linker.cfg my_program.o
+
+# Load binary file into the emulator
+go run main.go my_program.bin
+```
