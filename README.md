@@ -75,7 +75,7 @@ go run main.go example.bin
 
 ## Writing 6502 programs
 
-Programs can be written in assembly, built into a binary (.bin) file using the [cc65](https://github.com/cc65/cc65) toolchain, and then loaded into the emulator.
+Programs can be written in assembly or C, built into a binary (.bin) file using the [cc65](https://github.com/cc65/cc65) toolchain, and then loaded into the emulator.
 
 ```bash
 brew install cc65
@@ -88,7 +88,11 @@ Some sample programs are provided in the `programs/` directory.
 make programs
 ```
 
-All of the included sample programs are designed to be loaded at memory address 0x8000.
+All of the included sample assembly programs are designed to be loaded at memory address 0x8000.
+
+All of the included sample C programs are designed to be loaded at memory address 0x1000.
+
+### Assembly
 
 Steps to build an assembly program:
 
@@ -99,6 +103,28 @@ ca65 -o my_program.o my_program.s
 # Link our machine code into a binary file with everything laid out in specific memory locations using the linker configuration
 ld65 -o my_program.bin -C linker.cfg my_program.o
 
-# Load binary file into the emulator
-go run main.go my_program.bin
+# Load binary file into the emulator at address 0x8000
+go run main.go -s 0x8000 my_program.bin
+```
+
+### C
+
+Programs can also be written in C and compiled down into a binary file using cc65 that can be loaded into the 6502 emulator.
+
+When compiling C code with cc65 we need to tell it what the target system is (e.g. a C64 or a NES) so that it knows what memory locations our program can be placed in. As this project is just a bare 6502 emulator (i.e. it doesn't implement a full C64 or NES system) we need to specify the `none` target. This assumes a flat 64k memory and requires the program to be loaded at memory address 0x1000.
+
+Steps to compile a C program for a bare 6502 emulator:
+
+```bash
+# Compile C code into assembly code
+cc65 -t none -o my_program.s my_program.c
+
+# Assemble the assembly code into machine code (creates a re-locatable object file)
+ca65 -o my_program.o my_program.s
+
+# Link our machine code and the C runtime into a binary file with everything laid out in specific memory locations for the target system
+ld65 -t none -o my_program.bin my_program.o none.lib
+
+# Load binary file into the emulator at address 0x1000
+go run main.go -s 0x1000 my_program.bin
 ```
