@@ -41,9 +41,13 @@ func (m *Model) renderMemoryPage(startAddress uint16) string {
 }
 
 func (m *Model) statusView() string {
+	running := ""
+	if m.running {
+		running = m.runningStyle.Render("*** RUNNING ***")
+	}
 	return m.statusFlags() +
 		fmt.Sprintf("PC:  $%04X       Cycles:  %d\n", m.cpu.PC, m.cpu.TotalCycles) +
-		fmt.Sprintf("A:   $%02X  [%d]\n", m.cpu.A, m.cpu.A) +
+		fmt.Sprintf("A:   $%02X  %-5s  %s\n", m.cpu.A, fmt.Sprintf("[%d]", m.cpu.A), running) +
 		fmt.Sprintf("X:   $%02X  [%d]\n", m.cpu.X, m.cpu.X) +
 		fmt.Sprintf("Y:   $%02X  [%d]\n", m.cpu.Y, m.cpu.Y) +
 		fmt.Sprintf("SP:  $%02X\n\n", m.cpu.SP) +

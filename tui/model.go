@@ -10,9 +10,15 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+type runUpdateMsg struct{}
+
 type Model struct {
 	cpu            *processor.CPU
 	previousMemory [65536]byte // Track previous memory state to detect changes
+
+	runDelayMillis int
+	running        bool
+	runUpdateChan  chan runUpdateMsg
 
 	width  int
 	height int
@@ -23,20 +29,24 @@ type Model struct {
 	statusStyle             lipgloss.Style
 	statusBitSetStyle       lipgloss.Style
 	statusBitClearStyle     lipgloss.Style
+	runningStyle            lipgloss.Style
 	currentInstructionStyle lipgloss.Style
 	memoryChangedStyle      lipgloss.Style
 	helpStyle               lipgloss.Style
 }
 
-func NewModel(cpu *processor.CPU) *Model {
+func NewModel(cpu *processor.CPU, runDelayMillis int) *Model {
 	m := &Model{
 		cpu:                     cpu,
+		runDelayMillis:          runDelayMillis,
+		runUpdateChan:           make(chan runUpdateMsg),
 		keys:                    keys,
 		help:                    help.New(),
 		memoryStyle:             lipgloss.NewStyle().PaddingLeft(1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(lipgloss.Color("63")),
 		statusStyle:             lipgloss.NewStyle().PaddingLeft(1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(lipgloss.Color("63")),
 		statusBitSetStyle:       lipgloss.NewStyle().Foreground(lipgloss.Color("2")),
 		statusBitClearStyle:     lipgloss.NewStyle().Foreground(lipgloss.Color("161")),
+		runningStyle:            lipgloss.NewStyle().Foreground(lipgloss.Color("9")),
 		currentInstructionStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("111")),
 		memoryChangedStyle:      lipgloss.NewStyle().Foreground(lipgloss.Color("11")),
 		helpStyle:               lipgloss.NewStyle().PaddingTop(1),
@@ -46,7 +56,9 @@ func NewModel(cpu *processor.CPU) *Model {
 }
 
 func (m *Model) Init() tea.Cmd {
-	return nil
+	return tea.Batch(
+		m.waitForRunUpdateMsg(),
+	)
 }
 
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -57,6 +69,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, m.keys.Step):
 			m.step()
+		case key.Matches(msg, m.keys.Run):
+			return m, m.run()
 		case key.Matches(msg, m.keys.IRQ):
 			m.cpu.IRQ()
 		case key.Matches(msg, m.keys.NMI):
@@ -67,6 +81,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
 		}
+	case runUpdateMsg:
+		return m, m.waitForRunUpdateMsg()
 	}
 	return m, nil
 }

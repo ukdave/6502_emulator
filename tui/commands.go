@@ -1,5 +1,11 @@
 package tui
 
+import (
+	"time"
+
+	tea "github.com/charmbracelet/bubbletea"
+)
+
 func (m *Model) updateDimensions(width, height int) {
 	m.width = width
 	m.height = height
@@ -13,6 +19,34 @@ func (m *Model) step() {
 		if m.cpu.Cycles() == 0 {
 			break
 		}
+	}
+}
+
+func (m *Model) run() tea.Cmd {
+	return func() tea.Msg {
+		if m.running {
+			m.running = false
+		} else {
+			m.running = true
+			for {
+				pcBefore := m.cpu.PC
+				m.step()
+				m.runUpdateChan <- runUpdateMsg{}
+				time.Sleep(time.Duration(m.runDelayMillis) * time.Millisecond)
+				if !m.running || m.cpu.PC == 0x0000 || m.cpu.PC == pcBefore {
+					break
+				}
+			}
+			m.running = false
+			m.runUpdateChan <- runUpdateMsg{}
+		}
+		return nil
+	}
+}
+
+func (m *Model) waitForRunUpdateMsg() tea.Cmd {
+	return func() tea.Msg {
+		return <-m.runUpdateChan
 	}
 }
 

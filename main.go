@@ -13,7 +13,8 @@ import (
 )
 
 var opts struct {
-	StartAddress uint16 `short:"s" long:"start" description:"Start address to load the binary file into memory" default:"0x8000"`
+	StartAddress   uint16 `short:"s" long:"start" description:"Start address to load the binary file into memory" default:"0x8000"`
+	RunDelayMillis int    `short:"r" long:"runDelayMills" description:"Run delay in milliseconds" default:"100"`
 
 	Args struct {
 		BinaryPath string `positional-arg-name:"binary_file" description:"Path to the binary file to load into memory"`
@@ -30,14 +31,14 @@ func main() {
 	}
 
 	// Create and start the TUI program
-	p := tea.NewProgram(initialModel(opts.Args.BinaryPath, opts.StartAddress), tea.WithAltScreen())
+	p := tea.NewProgram(initialModel(opts.Args.BinaryPath, opts.StartAddress, opts.RunDelayMillis), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
 		os.Exit(1)
 	}
 }
 
-func initialModel(binaryPath string, startAddress uint16) *tui.Model {
+func initialModel(binaryPath string, startAddress uint16, runDelayMillis int) *tui.Model {
 	// Create a new bus
 	bus := bus.NewSimpleBus()
 
@@ -59,5 +60,5 @@ func initialModel(binaryPath string, startAddress uint16) *tui.Model {
 
 	// Create a new CPU
 	cpu := processor.NewCPU(bus)
-	return tui.NewModel(cpu)
+	return tui.NewModel(cpu, runDelayMillis)
 }
