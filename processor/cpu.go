@@ -37,7 +37,8 @@ type CPU struct {
 	PC     uint16 // Program Counter
 	Status byte   // Status Register
 
-	cycles uint8
+	TotalCycles uint64 // Total number of cycles executed
+	cycles      uint8
 }
 
 // NewCPU creates a new CPU instance.
@@ -55,6 +56,7 @@ func (c *CPU) Reset() {
 	c.SP = 0xFD
 	c.PC = c.ResetVector()
 	c.Status = 0x24 // Clear all flags except U and I
+	c.TotalCycles = 0
 }
 
 // ResetVector returns the 16-bit address read from the 6502 reset vector ($FFFC–$FFFD), which is loaded into
@@ -82,6 +84,7 @@ func (c *CPU) NMIVector() uint16 {
 // but still models timing by tracking the number of cycles the instruction consumes. Each call to Clock decrements
 // the remaining cycle count, and when it reaches zero the instruction is considered complete.
 func (c *CPU) Clock() {
+	c.TotalCycles++
 	if c.cycles > 0 {
 		c.cycles--
 		return
