@@ -81,24 +81,34 @@ func (m *Model) statusFlags() string {
 		m.cpu.Status)
 }
 
-func (m *Model) instructionsView(numInstructions int) string {
-	view := ""
+// instructionsView renders a disassembly of the instructions near the Program Counter. We start
+// disassembly from the Reset Vector or current PC address, whichever is lowest. We need to disassemble
+// at least `viewHeight` worth of instructions, but will continue past the current PC for a bit to
+// ensure the current instruction appears somewhere in the top half of the view.
+func (m *Model) instructionsView(viewHeight int) string {
 	addr := min(uint16(m.cpu.ResetVector()), m.cpu.PC)
-	for i := range numInstructions {
+
+	lines := []string{}
+	numInstructionsAfterPC := 0
+	for {
 		disassembledOp := m.cpu.DisassembleOperation(addr)
 
 		line := fmt.Sprintf("$%04X: % -9X %s", addr, disassembledOp.Bytes, disassembledOp.Disassembly)
 		if addr == m.cpu.PC {
-			view += m.currentInstructionStyle.Render("> " + line)
+			line = m.currentInstructionStyle.Render("> " + line)
 		} else {
-			view += ("  " + line)
+			line = ("  " + line)
 		}
-
-		if i < numInstructions-1 {
-			view += "\n"
-		}
+		lines = append(lines, line)
 
 		addr += uint16(disassembledOp.Operation.Size)
+
+		if addr > m.cpu.PC {
+			numInstructionsAfterPC++
+		}
+		if len(lines) >= viewHeight && numInstructionsAfterPC > viewHeight/2 {
+			break
+		}
 	}
-	return view
+	return strings.Join(lines[len(lines)-viewHeight:], "\n")
 }
