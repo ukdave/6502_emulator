@@ -1,0 +1,35 @@
+name: Build
+permissions:
+  contents: read
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.6'
+
+      - name: Install dependencies
+        run: |
+          go mod download
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+
+      - name: Vet
+        run: go build ./...
+
+      - name: Staticcheck
+        run: staticcheck ./...
+
+      - name: Test
+        run: go test -coverprofile cover.out ./...
+
+      - name: Build
+        run: go build -o 6502_emulator main.go
