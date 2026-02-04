@@ -6,6 +6,10 @@ It emulates only the 6502 processor itself — no NES, C64, or other system hard
 
 The emulator provides a flat 64 KB address space, backed entirely by RAM, and has been built as learning exercise rather than a full-featured system emulator.
 
+The terminal interface (TUI) was built using [Bubble Tea](https://github.com/charmbracelet/bubbletea).
+
+![Demo](demo.gif?raw=true "Demo")
+
 ## Overview
 
 ### What this is (and isn’t)
