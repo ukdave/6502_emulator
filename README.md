@@ -1,5 +1,9 @@
 # 6502 Emulator
 
+[![Build Status](https://github.com/ukdave/6502_emulator/actions/workflows/main.yml/badge.svg)](https://github.com/ukdave/6502_emulator/actions/workflows/main.yml)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/ukdave/6502_emulator)
+[![License](https://img.shields.io/github/license/ukdave/6502_emulator)](https://github.com/ukdave/6502_emulator/blob/main/LICENSE.txt)
+
 This is a standalone MOS 6502 CPU emulator written in Go.
 
 It emulates only the 6502 processor itself — no NES, C64, or other system hardware is implemented.
