@@ -1,0 +1,21 @@
+{
+  "ignoreRegExpList": [
+    "import\\s+\"[^\"]+\"",
+    "import\\s+\\([\\s\\S]*?\\)",
+    "(?:0x|\\$)[0-9a-fA-F]+"
+  ],
+  "words": [
+    "datasheets",
+    "honnef",
+    "INDX",
+    "javidx",
+    "lipgloss",
+    "maskable",
+    "nestest",
+    "powerup",
+    "reshim",
+    "staticcheck",
+    "vfalse",
+    "vtrue"
+  ]
+}
