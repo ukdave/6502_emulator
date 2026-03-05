@@ -4,10 +4,10 @@ package tui
 import (
 	"github.com/ukdave/6502_emulator/processor"
 
-	"github.com/charmbracelet/bubbles/help"
-	"github.com/charmbracelet/bubbles/key"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/help"
+	"charm.land/bubbles/v2/key"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 )
 
 type runUpdateMsg struct{}
@@ -25,8 +25,7 @@ type Model struct {
 	keys   keyMap
 	help   help.Model
 
-	memoryStyle             lipgloss.Style
-	statusStyle             lipgloss.Style
+	boxStyle                lipgloss.Style
 	statusBitSetStyle       lipgloss.Style
 	statusBitClearStyle     lipgloss.Style
 	runningStyle            lipgloss.Style
@@ -42,8 +41,7 @@ func NewModel(cpu *processor.CPU, runDelayMillis int) *Model {
 		runUpdateChan:           make(chan runUpdateMsg),
 		keys:                    keys,
 		help:                    help.New(),
-		memoryStyle:             lipgloss.NewStyle().PaddingLeft(1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(lipgloss.Color("63")),
-		statusStyle:             lipgloss.NewStyle().PaddingLeft(1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(lipgloss.Color("63")),
+		boxStyle:                lipgloss.NewStyle().Padding(0, 1).BorderStyle(lipgloss.NormalBorder()).BorderForeground(lipgloss.Color("63")),
 		statusBitSetStyle:       lipgloss.NewStyle().Foreground(lipgloss.Color("2")),
 		statusBitClearStyle:     lipgloss.NewStyle().Foreground(lipgloss.Color("161")),
 		runningStyle:            lipgloss.NewStyle().Foreground(lipgloss.Color("9")),
@@ -65,7 +63,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.updateDimensions(msg.Width, msg.Height)
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		switch {
 		case key.Matches(msg, m.keys.Step):
 			m.step()
@@ -87,30 +85,34 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m *Model) View() string {
-	rightColWidth := 42
-	statusPanelHeight := 12
+func (m *Model) View() tea.View {
+	rightColWidth := 40 + m.boxStyle.GetHorizontalFrameSize()
+	statusPanelHeight := 12 + m.boxStyle.GetVerticalFrameSize()
 
 	help := m.helpStyle.
 		Render(m.help.View(m.keys))
 
-	status := m.statusStyle.
+	status := m.boxStyle.
 		Width(rightColWidth).
 		Height(statusPanelHeight).
 		Render(m.statusView())
 
-	memory := m.memoryStyle.
-		Width(m.width - lipgloss.Width(status) - 2).
-		Height(m.height - lipgloss.Height(help) - 2).
+	memory := m.boxStyle.
+		Width(m.width - rightColWidth).
+		Height(m.height - lipgloss.Height(help)).
 		Render(m.memoryView())
 
-	instructionPanelHeight := lipgloss.Height(memory) - lipgloss.Height(status) - 2
-	instructions := m.statusStyle.
+	instructionPanelHeight := lipgloss.Height(memory) - lipgloss.Height(status)
+	instructions := m.boxStyle.
 		Width(rightColWidth).
-		Height(m.height - lipgloss.Height(status) - lipgloss.Height(help) - 2).
-		Render(m.instructionsView(instructionPanelHeight))
+		Height(instructionPanelHeight).
+		Render(m.instructionsView(instructionPanelHeight - m.boxStyle.GetVerticalFrameSize()))
 
 	rightCol := lipgloss.JoinVertical(lipgloss.Left, status, instructions)
 	topRow := lipgloss.JoinHorizontal(lipgloss.Top, memory, rightCol)
-	return lipgloss.JoinVertical(lipgloss.Left, topRow, help)
+	viewStr := lipgloss.JoinVertical(lipgloss.Left, topRow, help)
+
+	v := tea.NewView(viewStr)
+	v.AltScreen = true
+	return v
 }

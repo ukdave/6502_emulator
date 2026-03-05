@@ -8,7 +8,7 @@ import (
 	"github.com/ukdave/6502_emulator/processor"
 	"github.com/ukdave/6502_emulator/tui"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 	flags "github.com/jessevdk/go-flags"
 )
 
@@ -31,7 +31,7 @@ func main() {
 	}
 
 	// Create and start the TUI program
-	p := tea.NewProgram(initialModel(opts.Args.BinaryPath, opts.StartAddress, opts.RunDelayMillis), tea.WithAltScreen())
+	p := tea.NewProgram(initialModel(opts.Args.BinaryPath, opts.StartAddress, opts.RunDelayMillis))
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
 		os.Exit(1)

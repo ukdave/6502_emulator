@@ -1,6 +1,6 @@
 package tui
 
-import "github.com/charmbracelet/bubbles/key"
+import "charm.land/bubbles/v2/key"
 
 // keyMap defines a set of keybindings. To work for help it must satisfy key.Map.
 type keyMap struct {
@@ -14,7 +14,7 @@ type keyMap struct {
 
 var keys = keyMap{
 	Step: key.NewBinding(
-		key.WithKeys(" ", "enter"),
+		key.WithKeys("space", "enter"),
 		key.WithHelp("space/enter", "Step"),
 	),
 	Run: key.NewBinding(

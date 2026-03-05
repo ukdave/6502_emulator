@@ -3,13 +3,13 @@ package tui
 import (
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 )
 
 func (m *Model) updateDimensions(width, height int) {
 	m.width = width
 	m.height = height
-	m.help.Width = width
+	m.help.SetWidth(width)
 }
 
 func (m *Model) step() {
